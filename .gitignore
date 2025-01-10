@@ -168,4 +168,10 @@ cython_debug/
 #.idea/
 
 # PyPI configuration file
-.pypirc
+src/pu-dataset/
+*/pu-dataset/
+*/CWRU-dataset
+*/venv
+venv
+
+.DS_Store
