@@ -1,11 +1,12 @@
 import glob
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from randall_methods import randall_method_1, randall_method_2, randall_method_3
 import data_utils as du
-
 
 def plot_method_1(title, time, signal, sq_env_f, sq_env):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 3))
@@ -50,7 +51,8 @@ def randall_fig_5():
     fs = 12e3
     mat_files = glob.glob("CWRU-dataset/**/*209*.mat", recursive=True)
 
-    signal, _, _, rpm = du.extract_signals(mat_files[0], normal=False)
+    signal, _, _, _ = du.extract_signals(mat_files[0], normal=False)
+
     num_samples = int(fs*10)
     signal = signal[:num_samples]
     time = np.linspace(0, 1/fs*num_samples, num_samples)
@@ -232,13 +234,13 @@ def randall_fig_19():
     plt.show()
 
 if __name__ == "__main__":
-    # randall_fig_5()
+    randall_fig_5()
     # randall_fig_6()
     # randall_fig_7()
     # randall_fig_8()
     # randall_fig_9()
     # randall_fig_11()
     # randall_fig_12()
-    randall_fig_19()
+    # randall_fig_19()
 
 
