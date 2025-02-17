@@ -101,16 +101,16 @@ def create_left_panel():
                     dmc.NumberInput(
                         id='y_lim_1',
                         value=0,
-                        step=1,
-                        precision=2,
+                        step=0.01,
+                        precision=4,
                         label="y min",
                         style={'width': '20%'}
                     ),
                     dmc.NumberInput(
                         id='y_lim_2',
                         value=0,
-                        step=1,
-                        precision=2,
+                        step=0.01,
+                        precision=4,
                         label="y max",
                         style={'width': '20%'}
                     ),
@@ -167,7 +167,7 @@ def create_left_panel():
                     fullWidth=True
                 ),
             ], spacing="sm"),
-        ], p="md", style={'width': '400px'})
+        ], p="md", style={'width': '400px'}, withBorder=True)
     ], align="flex-start", spacing="md")
 
 def create_plot_options():
