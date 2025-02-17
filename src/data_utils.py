@@ -1,11 +1,98 @@
 import glob
 import os
 
+import numpy as np
 import pandas as pd
 import scipy
 
 import utils
 
+cwru_fault_frequencies = {"DE": {"BPFI": 5.415,
+                                  "BPFO": 3.585,
+                                  "BSF": 2.357,
+                                  "FTF": 0.3983},
+                          "FE": {"BPFI": 4.947,
+                                "BPFO": 3.053,
+                                 "BSF": 1.994,
+                                 "FTF": 0.3816}}
+def save_to_parquet(signal, fs, name, measurement_location, unit, meas_id, fault, fault_frequencies, rotating_freq_hz):
+    """
+    Save measurement data to a parquet file.
+    """
+    
+    # Create DataFrame with both data and metadata
+    df = pd.DataFrame({
+        'signal': signal,
+        'unit': unit,
+        # Store metadata as columns with single values
+        'sampling_frequency': fs,
+        'name': name,
+        'fault': fault,
+        'measurement_location': measurement_location,
+        'rotating_freq_hz': rotating_freq_hz,
+        'meas_id': meas_id
+    })
+    
+    # Store fault frequencies as additional columns if provided
+    if fault_frequencies is not None:
+        for location, freqs in fault_frequencies.items():
+            for fault_type, value in freqs.items():
+                # Broadcast the value to match the length of the DataFrame
+                df[f'fault_freq_{location}_{fault_type}'] = value
+    
+    filename = f"measurements/{name}_{meas_id}_{measurement_location}.parquet"
+    # Save to parquet
+    df.to_parquet(filename)
+    
+    return filename
+
+def read_from_parquet(contents):
+    """
+    Read measurement data from a parquet file uploaded through Dash.
+    
+    Parameters:
+    -----------
+    contents : str
+        Base64 encoded string from Dash Upload component
+    
+    Returns:
+    --------
+    tuple
+        (signal, fs, name, measurement_location, unit, fault_frequencies)
+    """
+    # Decode the base64 string
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    # Read parquet from bytes
+    df = pd.read_parquet(io.BytesIO(decoded))
+    
+    # Extract signal and time data
+    signal = df['signal'].values
+    
+    # Extract metadata (taking first value since these are broadcasted)
+    fs = df['sampling_frequency'].iloc[0]
+    name = df['name'].iloc[0]
+    measurement_location = df['measurement_location'].iloc[0]
+    unit = df['unit'].iloc[0]
+    meas_id = df['meas_id'].iloc[0]
+    fault = df['fault'].iloc[0]
+    rotating_freq_hz = df['rotating_freq_hz'].iloc[0]
+    
+    # Reconstruct fault frequencies dictionary
+    fault_frequencies = {}
+    fault_freq_columns = [col for col in df.columns if col.startswith('fault_freq_')]
+    
+    if fault_freq_columns:
+        for col in fault_freq_columns:
+            _, location, fault_type = col.split('_', 2)
+            if location not in fault_frequencies:
+                fault_frequencies[location] = {}
+            fault_frequencies[location][fault_type] = df[col].iloc[0]
+    else:
+        fault_frequencies = None
+    
+    return signal, fs, name, measurement_location, unit, meas_id, fault, fault_frequencies, rotating_freq_hz
 
 def get_bearing_frequencies(end="DE"):
     '''
