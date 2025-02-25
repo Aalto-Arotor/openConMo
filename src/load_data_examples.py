@@ -25,8 +25,9 @@ for i, row in CWRU_data.iterrows():
 
 print()
 print()
+
 # To get one sample
-sample, rpm, tags = du.get_CWRU_measurement("DE", "DE", "ir", 7, "-", 12, 1)
+sample, rpm, tags = du.get_CWRU_measurement("DE", "DE", "IR", 7, "-", 12, 1)
 print(f"Sample shape: {sample.shape}")
 print(f"Sample rpm: {rpm}")
 print(f"Sample tags: {tags}")
