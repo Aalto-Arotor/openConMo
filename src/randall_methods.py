@@ -47,7 +47,7 @@ def DRS(signal, N, Delta):
     # nom and denom of H
     nominator = np.zeros(N, dtype=complex)
     denominator = np.zeros(N, dtype=complex)
-    for k in tqdm(range(2*N+Delta, len(signal)), desc="Building DRS filter"):
+    for k in tqdm(range(2*N+Delta, len(signal),100), desc="Building DRS filter"):
         window_idx = np.arange(k-N, k)
         delayed_window_idx = np.arange(k-2*N-Delta, k-N-Delta)
 
@@ -77,7 +77,7 @@ def DRS(signal, N, Delta):
     # of the signal with the filter response
     deterministic_part = np.zeros(len(signal))
     random_part = np.zeros(len(signal))
-    for i in tqdm(range(N+Delta, len(signal), 1000), desc="Computing the DRS"):
+    for i in tqdm(range(N+Delta, len(signal), 1), desc="Computing the DRS"):
         deterministic_part[i] = signal[i-N-Delta:i-Delta]@h_n
         random_part[i] = signal[i] - deterministic_part[i]
 
