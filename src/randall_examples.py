@@ -200,12 +200,19 @@ def randall_fig_12():
 
 
 def randall_fig_19():
+    import os
+    print("Inside randall_fig_19, current working directory:", os.getcwd())
     '''
     Record 156DE (12k, 0.007 in. drive end outer race fault opposite, 1797 rpm). (a) Time signal from Method 2 (prewhitening); cursors at 1/BPFO.
     (b) Corresponding envelope spectrum; Y1 diagnosis.
     '''
+
     fs = 12e3
     mat_files = glob.glob("CWRU-dataset/**/156*.mat", recursive=True)
+
+    if not mat_files:
+        print("⚠️ No .mat files found! Check the folder path and filename pattern.")
+        return  # Exit function
 
     # Exctract DE signal
     signal, _, _, rpm = du.extract_signals(mat_files[0], normal=False)
@@ -234,13 +241,13 @@ def randall_fig_19():
     plt.show()
 
 if __name__ == "__main__":
-    randall_fig_5()
+    # randall_fig_5()
     # randall_fig_6()
     # randall_fig_7()
     # randall_fig_8()
     # randall_fig_9()
     # randall_fig_11()
     # randall_fig_12()
-    # randall_fig_19()
+    randall_fig_19()
 
 
