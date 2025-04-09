@@ -3,8 +3,9 @@ import glob
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+import scipy.fft
 from tqdm import tqdm
-
+from scipy.fft import fft, ifft
 from kurtogram import fast_kurtogram
 import utils as ut
 
@@ -83,13 +84,37 @@ def DRS(signal, N, Delta):
 
     return random_part
 
-
 def randall_method_2(signal, fs):
+    print("Inside randall_method_2")
+
     t = np.linspace(0, len(signal)/fs, len(signal))
     X = scipy.fft.fft(signal)
-    x_prewithened = scipy.fft.ifft(X/np.abs(X)).real
-    return t, x_prewithened
+    phase = np.angle(X)
 
+    log_amplitude = np.log(np.abs(X)+ 1e-10)
+
+    real_cepstrum = scipy.fft.ifft(log_amplitude)
+
+    edited_cepstrum = np.zeros_like(real_cepstrum)
+    edited_cepstrum[0] = real_cepstrum[0]
+
+    edited_log_amplitude_spectrum = scipy.fft.fft(edited_cepstrum)
+
+    edited_log_spectrum = edited_log_amplitude_spectrum + 1j * phase
+
+    X = np.exp(edited_log_spectrum)
+
+    # time_signal = scipy.fft.ifft(X)
+
+    time_signal = np.real(scipy.fft.ifft(X))
+
+    return t, time_signal
+
+'''def randall_method_22(signal, fs):
+    print("TESTING 2")
+    t = np.linspace(0, len(signal)/fs, len(signal))
+    x_prewithened = np.abs(ifft(np.log(np.absolute(fft(signal)))))
+    return t, x_prewithened'''
 
 def randall_method_3(signal, fs, N=16384, Delta=500, nlevel=2):
     '''

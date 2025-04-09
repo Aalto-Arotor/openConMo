@@ -1,15 +1,22 @@
-from dash.dependencies import Input, Output
-from dash import html
+import sys
+sys.path.append('../')
+from src.randall_methods import randall_method_1, randall_method_2, randall_method_3
 from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
 from utils import read_from_parquet
+
+from dash.dependencies import Input, Output
+from dash import html
 import dash_mantine_components as dmc
 import numpy as np
+
+
 
 def register_callbacks(app):
     @app.callback(
         [Output('time-plot', 'figure'),
          Output('frequency-plot', 'figure'),
          Output('envelope-plot', 'figure')],
+         
         [Input('upload-data', 'contents'),
          Input('dummy-dropdown-1', 'value'),
          Input('time-start', 'value'),
@@ -27,6 +34,7 @@ def register_callbacks(app):
     def update_plots(contents, dropdown_value, time_start, time_stop, 
                     x_lim_1, x_lim_2, y_lim_1, y_lim_2,
                     ff_hz, n_harmonics, f_sb_hz, freq_scale, amp_scale):
+        
         if contents is None:
             dummy_fig = create_dummy_figure("Upload a file")
             return dummy_fig, dummy_fig, dummy_fig
@@ -48,7 +56,17 @@ def register_callbacks(app):
             
             upper_plot = create_time_series_plot(signal_slice, fs, title=title_upper, unit=unit)
             lower_plot = create_frequency_domain_plot(signal_slice, fs, title=title_lower, unit=unit)
+            
+            if dropdown_value == "1":
+                print("Method 1\n")
+            elif dropdown_value == "2":
+                print("Method 2\n")
+            elif dropdown_value == "3":
+                print("Method 3\n")
+
+            
             envelope_plot = create_envelope_spectrum_plot(signal_slice, fs, title=title_envelope, unit=unit)
+            
             
             def add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz):
                 if not (ff_hz and n_harmonics and ff_hz > 0):

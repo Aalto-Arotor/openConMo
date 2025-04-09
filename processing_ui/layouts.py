@@ -31,7 +31,7 @@ def create_left_panel():
             
             # Metadata section
             dmc.Paper([
-                dmc.Title("Measurement Info", order=4),
+                dmc.Title("Measurement Info", order=3),
                 dmc.Paper(
                     id='metadata-display',
                     children=[

@@ -16,6 +16,7 @@ app.layout = html.Div([
             
             # Right panel for plots
             dmc.Paper([
+                dmc.Title("Signal Analysis Plots", order=3, align="Left"),  # Adding a title
                 dcc.Graph(id='time-plot'),
                 dcc.Graph(id='frequency-plot'),
                 dcc.Graph(id='envelope-plot'),
