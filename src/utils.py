@@ -45,9 +45,12 @@ def bandpass_filter(signal, fs, fc, BW, order=200):
     nyquist = fs / 2
     lowcut = np.max([0.000000001, (fc - BW / 2) / nyquist])
     highcut = np.min([0.99999999, (fc + BW / 2) / nyquist])
-    print(fs, fc, BW)
-    print(nyquist, lowcut, highcut)
-
+    print('Fs: {}'.format(fs))
+    print('Fc: {}'.format(fc))
+    print('Nyquist: {}'.format(nyquist))
+    print('Lowcut: {}'.format(lowcut))
+    print('Highcut: {}'.format(highcut))
+    print('signal : {}'.format(signal))
     # Design the bandpass FIR filter
     taps = scipy.signal.firwin(order + 1, [lowcut, highcut], pass_zero=False)
 

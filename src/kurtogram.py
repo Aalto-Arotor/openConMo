@@ -48,6 +48,8 @@ from scipy.signal import lfilter
 import numpy as np
 import matplotlib.pyplot as plt
 
+import scipy.io
+
 def fast_kurtogram(x,fs,nlevel=7, verbose=False):
     N = x.flatten().size
     N2 = np.log2(N) - 7
@@ -83,7 +85,7 @@ def fast_kurtogram(x,fs,nlevel=7, verbose=False):
     fi = (index[1])/3./2**(nlevel+1)
     fi += 2.**(-2-l1)
     fc = fs*fi
-
+    
     if verbose:
         print('Max Level: {}'.format(level_max))
         print('Freq: {}'.format(fi))
@@ -276,12 +278,30 @@ def binary(i,k):
 
 
 if __name__ == "__main__":
-    pass
+
+
+    data = scipy.io.loadmat('src/matlab_example_data/outer_fault.mat')
+    data = data['xOuter']
+    samplingRate = 97656
+
+    Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=9)
+    print(Kwav.shape)
+    # Plotting the kurtogram
+
+    im = plt.imshow(Kwav, aspect='auto',
+               extent=(freq_w[0], freq_w[-1], Level_w[0], Level_w[-1]),
+               interpolation='none')
+    cbar = plt.colorbar(im)
+    cbar.set_label('Kurtosis', fontsize=14)
+
+    plt.title('Kurtogram and Spectral Kurtosis for Band Selection', fontsize=10, pad = 10)
+
+    plt.show()
+    
+    '''pass
     # data = np.genfromtxt('aoyu_example_data.txt',skip_header=23,delimiter='\n')
     # samplingRate = 100e3
     # speed = 1000/60
     # Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=6)
     # plt.imshow(np.clip(Kwav,0,np.inf),aspect=10, interpolation="none")
-    # plt.show()
-
-
+    # plt.show()'''
