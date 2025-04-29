@@ -276,32 +276,45 @@ def binary(i,k):
 
     return a
 
-
 if __name__ == "__main__":
+    import scipy.io
+    import matplotlib.pyplot as plt
 
-
+    # Load the data
     data = scipy.io.loadmat('src/matlab_example_data/outer_fault.mat')
-    data = data['xOuter']
+    data = data['xOuter'].squeeze()
     samplingRate = 97656
 
-    Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=9)
-    print(Kwav.shape)
-    # Plotting the kurtogram
+    # Run fast kurtogram
+    Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=9, verbose=True)
 
+    # Define decomposition levels and corresponding window lengths
+    levels = list(range(10))  # Levels 0 to 9
+    display_levels = list(reversed(levels))  # For labeling top (0) to bottom (9)
+
+    # Generate window lengths (2 to 1024) and reverse to match visual order
+    win_lengths = [2**(i+1) for i in levels]           # [2, 4, ..., 1024]
+    win_lengths = list(reversed(win_lengths))          # [1024, ..., 2]
+
+    # Create y-tick labels: e.g. "0 (1024)", "1 (512)", ..., "9 (2)"
+    ytick_labels = [f'{lvl} ({wl})' for lvl, wl in zip(display_levels, win_lengths)]
+
+    # Plot the kurtogram
+    plt.figure(figsize=(10, 6))
     im = plt.imshow(Kwav, aspect='auto',
-               extent=(freq_w[0], freq_w[-1], Level_w[0], Level_w[-1]),
-               interpolation='none')
+                    extent=(freq_w[0] / 1000, freq_w[-1] / 1000, 0, len(levels)-1),
+                    interpolation='none', origin='upper')  # top-to-bottom layout
+
+    # Colorbar and axis labels
     cbar = plt.colorbar(im)
-    cbar.set_label('Kurtosis', fontsize=14)
+    cbar.set_label('Spectral Kurtosis', fontsize=14)
 
-    plt.title('Kurtogram and Spectral Kurtosis for Band Selection', fontsize=10, pad = 10)
+    plt.xlabel('Frequency [kHz]', fontsize=12)
+    plt.ylabel('Decomposition Level (Window Length)', fontsize=12)
+    plt.title('Kurtogram and Spectral Kurtosis for Band Selection', fontsize=10, pad=10)
 
+    # Set custom y-ticks
+    plt.yticks(ticks=levels, labels=ytick_labels)
+
+    plt.tight_layout()
     plt.show()
-    
-    '''pass
-    # data = np.genfromtxt('aoyu_example_data.txt',skip_header=23,delimiter='\n')
-    # samplingRate = 100e3
-    # speed = 1000/60
-    # Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=6)
-    # plt.imshow(np.clip(Kwav,0,np.inf),aspect=10, interpolation="none")
-    # plt.show()'''

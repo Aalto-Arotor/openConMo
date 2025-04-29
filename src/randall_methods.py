@@ -164,143 +164,6 @@ def plot_kurtogram(Kwav, freq_w, level_w):
 
 
 if __name__ == "__main__":
-    '''mat_files = glob.glob("matlab_example_data/outer_fault.mat", recursive=True)
-    print("\n".join(mat_files))
-
-    fs = 97656
-    # signal = scipy.io.loadmat(mat_files[0])['xOuter'].ravel()
-    signal = scipy.io.loadmat('src/matlab_example_data/outer_fault.mat')
-    signal = signal['xOuter'].ravel()
-    print(signal)
-    time = np.linspace(0, len(signal)/fs, len(signal))
-    plt.plot(time, signal, c="b", linewidth=0.5)
-    plt.xlim(0, 0.1)
-    plt.show()
-
-    analytic_signal = scipy.signal.hilbert(signal)
-    envelope = np.abs(analytic_signal)
-    squared_envelope = envelope ** 2
-    f, X = ut.oneside_fft(squared_envelope, fs)
-
-    plt.xlim(0, 1000)
-    print(f[0], f[-1])
-    f, X = scipy.signal.periodogram(squared_envelope, fs, window="hann")
-    X = np.sqrt(X)
-    plt.plot(f, X, c="b", linewidth=0.5)
-    plt.show()'''
-    # Set RPM manually
-    # rpm = 1750  # RPM value
-
-    # # Load signal
-    # fs = 12e3
-    # mat_files = glob.glob("/Users/elmo/Arotor/openConMo/src/CWRU-dataset/12k_Drive_End_Bearing_Fault_Data/B/028/3007_2.mat", recursive=True)
-
-    # # Assuming your helper function exists:
-    # signal, _, _, _ = du.extract_signals(mat_files[0], normal=False)
-
-    # # Convert time (seconds) to shaft revolutions
-    # time = np.linspace(0, len(signal) / fs, len(signal))
-    # shaft_revs = time * (rpm / 60)  # Convert time in seconds to revolutions
-
-    # # Apply DRS filtering
-    # N = 8192
-    # Delta = 500
-    # random_part, deterministic_part = DRS(signal, N=N, Delta=Delta)
-
-
-    # #plt.figure(figsize=(15, 9))
-    # #plt.semilogy(np.abs(hn))
-    # #plt.title("Filter weights")
-    # # Plot
-    # plt.figure(figsize=(15, 9))
-
-    # # Plot the original vibration signal
-    # plt.subplot(3, 1, 1)
-    # plt.plot(shaft_revs, signal, label='Original signal')
-    # plt.title("(a) Measured vibration signal")
-    # plt.xlabel("Shaft Revolutions")
-    # plt.ylabel("Amplitude")
-    # plt.grid(True)
-
-    # # Plot the extracted periodic (deterministic) part
-    # plt.subplot(3, 1, 2)
-    # plt.plot(shaft_revs, deterministic_part, label='Deterministic (periodic) part', color='green')
-    # plt.title("(b) Extracted periodic part")
-    # plt.xlabel("Shaft Revolutions")
-    # plt.ylabel("Amplitude")
-    # plt.grid(True)
-
-    # # Plot the extracted non-deterministic (random) part
-    # plt.subplot(3, 1, 3)
-    # plt.plot(shaft_revs, random_part, label='Random (non-deterministic) part', color='orange')
-    # plt.title("(c) Extracted non-deterministic part")
-    # plt.xlabel("Shaft Revolutions")
-    # plt.ylabel("Amplitude")
-    # plt.grid(True)
-
-    # plt.tight_layout()
-    # plt.show()
-    # Parameters
-
-    '''version 1'''
-    # fs = 1000  # Sampling frequency (Hz)
-    # t = np.linspace(0, 1, fs, endpoint=False)  # Time vector (1 second duration)
-    # frequency = 50  # Frequency of the sine wave (Hz)
-    # amplitude = 1  # Amplitude of the sine wave
-    # noise_amplitude = 0.5  # Amplitude of the noise
-    # N = 100  # Window size for DRS
-    # Delta = 10  # Delay parameter for DRS
-
-    # # Generate sine wave
-    # sine_wave = amplitude * np.sin(2 * np.pi * frequency * t)
-
-    # # Generate random noise
-    # noise = noise_amplitude * np.random.normal(size=len(t))
-
-    # # Combine sine wave and noise
-    # signal = sine_wave + noise
-
-    # # Apply DRS (Deterministic-Random Separation)
-    # random_part, deterministic_part = DRS(signal, N, Delta)
-
-    # # Plot the results
-    # plt.figure(figsize=(12, 8))
-
-    # # Plot 1: Original signal
-    # plt.subplot(3, 1, 1)
-    # plt.plot(t, signal, label="Signal (Sine + Noise)", color="blue")
-    # plt.xlabel("Time (s)")
-    # plt.ylabel("Amplitude")
-    # plt.title("Original Signal (Sine + Noise)")
-    # plt.legend()
-    # plt.grid(True)
-
-    # # Plot 2: Deterministic component
-    # plt.subplot(3, 1, 2)
-    # plt.plot(t, deterministic_part, label="Deterministic Component (Extracted by DRS)", color="green")
-    # plt.xlabel("Time (s)")
-    # plt.ylabel("Amplitude")
-    # plt.title("Deterministic Component (Extracted by DRS)")
-    # plt.legend()
-    # plt.grid(True)
-
-    # # Plot 3: Random component
-    # plt.subplot(3, 1, 3)
-    # plt.plot(t, random_part, label="Random Component (Extracted by DRS)", color="red")
-    # plt.xlabel("Time (s)")
-    # plt.ylabel("Amplitude")
-    # plt.title("Random Component (Extracted by DRS)")
-    # plt.legend()
-    # plt.grid(True)
-
-    # plt.tight_layout()
-    # plt.show()
-
-    '''Version 2'''
-    def first_order_tracking(signal, alpha):
-    # Recursive filter: y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
-        smoothed_signal = scipy.signal.lfilter([alpha], [1, -(1 - alpha)], signal) * 3
-        return smoothed_signal
 
 
     # Parameters
@@ -325,25 +188,23 @@ if __name__ == "__main__":
     # Apply DRS (Deterministic-Random Separation)
     random_part, deterministic_part = DRS(signal, N, Delta)
 
-    # Apply first-order tracking to the deterministic component
-    smoothed_deterministic = first_order_tracking(deterministic_part, alpha)
-
     # Plot the results
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(8, 6))
 
     # Plot 1: Original signal
-    plt.subplot(4, 1, 1)
+    plt.subplot(3, 1, 1)
+    plt.xlim(0.2, 0.4)
     plt.plot(t, signal, label="Signal (Sine + Noise)", color="blue")
-    plt.plot(t, sine_wave, label="Pure Sine Wave", color="purple", linestyle="--")
-    plt.plot(t, noise, label="Noise", color="orange", linestyle="--")
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude")
-    plt.title("Original Signal (Sine + Noise)")
+    plt.title("Original Signal")
     plt.legend()
     plt.grid(True)
 
     # Plot 2: Deterministic component
-    plt.subplot(4, 1, 2)
+    plt.subplot(3, 1, 2)
+    #x-limit
+    plt.xlim(0.2, 0.4)
     plt.plot(t, deterministic_part, label="Deterministic Component (Extracted by DRS)", color="green")
     plt.plot(t, sine_wave, label="Pure Sine Wave", color="purple", linestyle="--")
     plt.xlabel("Time (s)")
@@ -352,25 +213,17 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(True)
 
-    # Plot 3: Smoothed deterministic component (First-order tracking)
-    plt.subplot(4, 1, 3)
-    plt.plot(t, sine_wave, label="Pure Sine Wave", color="purple", linestyle="--")
-    plt.plot(t, smoothed_deterministic, label="Smoothed Deterministic Component (First-Order Tracking)", color="orange")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Amplitude")
-    plt.title("Smoothed Deterministic Component (First-Order Tracking)")
-    plt.legend()
-    plt.grid(True)
-
-    # Plot 4: Random component
-    plt.subplot(4, 1, 4)
+    # Plot 3: Random component (Fixed title)
+    plt.subplot(3, 1, 3)
+    plt.xlim(0.2, 0.4)
+    plt.ylim(-1.6, 2)
     plt.plot(t, random_part, label="Random Component (Extracted by DRS)", color="red")
-    plt.plot(t, noise, label="Pure Sine Wave", color="purple", linestyle="--")
+    plt.plot(t, noise, label="Noise", color="purple", linestyle="--")
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude")
     plt.legend()
     plt.grid(True)
 
+    # Adjust layout and display
     plt.tight_layout()
     plt.show()
-

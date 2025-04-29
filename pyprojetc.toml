@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openConMo"
+version =  "1.0.0"
+description = "A Python package for vibration signal based condition monitoring"
+authors = [
+    { name = "Elmo Laine", email = "elmo.laine@aalto.fo" }
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "dash>=2.18.2,<3.0.0",
+    "numpy>=2.2.3,<3.0.0",
+    "plotly>=6.0.0,<7.0.0",
+    "scipy>=1.7.0,<2.0.0",
+]
+
+[project.urls]
+Homepage = https://github.com/Aalto-Arotor/openConMo
+
+[project.scripts]
+
+# --- Setuptools specific configuration ---
+[tool.setuptools.packages.find]
+exclude = ["tests*", "examples*"]
+
+[tool.setuptools.dynamic]
+
+[tool.setuptools.package-data]
+
+
