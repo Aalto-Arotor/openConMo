@@ -170,9 +170,10 @@ cython_debug/
 # PyPI configuration file
 src/pu-dataset/
 */pu-dataset/
-*/CWRU-dataset
+**/CWRU-dataset
+**/CWRU
 */venv
 venv
-
 .DS_Store
 *.parquet
+**/DRS_examples.ipynb

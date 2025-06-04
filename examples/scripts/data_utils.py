@@ -4,8 +4,16 @@ import os
 import numpy as np
 import pandas as pd
 import scipy
+import base64
+import io
 
-import utils
+import sys
+from pathlib import Path
+
+# Add the folder where this notebook lives to sys.path
+sys.path.append(str(Path().resolve()))
+
+import openconmo.utils as utils
 
 cwru_fault_frequencies = {"DE": {"BPFI": 5.415,
                                   "BPFO": 3.585,

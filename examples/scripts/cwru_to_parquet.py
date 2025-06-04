@@ -1,3 +1,4 @@
+# This script is deprecated. All CWRU data is now loaded from the feather file created by CWRU_download.py.
 
 import glob
 from datetime import datetime
@@ -6,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import data_utils as du
+import examples.scripts.data_utils as du
 
 def save_cwru_to_parquet(case_num, fs, randall_diagnoses, fault):
     mat_files = glob.glob(f"CWRU-dataset/**/*{case_num}*.mat", recursive=True)

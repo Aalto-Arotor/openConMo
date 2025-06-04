@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from scipy.signal import hilbert
 
 def create_dummy_figure(title):
+    """Create an empty placeholder Plotly figure with a title and styled layout."""
     return {
         'data': [],
         'layout': {

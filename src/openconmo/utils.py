@@ -3,15 +3,25 @@ import numpy as np
 
 def oneside_fft(x, fs):
     """
-    Calculate the one-sided FFT of a real-valued signal x sampled at times t.
+    Compute the one-sided FFT (magnitude spectrum) of a real-valued signal.
 
-    Parameters:
-    - t: Time array
-    - x: Signal array
+    This function returns the positive frequency components of the discrete
+    Fourier transform (DFT) of the input signal, scaled appropriately for
+    power analysis.
 
-    Returns:
-    - oneside_fft: One-sided FFT of the signal
-    - oneside_freq: Corresponding frequency values
+    Parameters
+    ----------
+    x : ndarray
+        Input time-domain signal (real-valued).
+    fs : float
+        Sampling frequency of the signal in Hz.
+
+    Returns
+    -------
+    freqs : ndarray
+        Array of positive frequency values in Hz.
+    spectrum : ndarray
+        One-sided magnitude spectrum of the input signal.
     """
     # calculate DFT
     n = len(x)
@@ -29,32 +39,47 @@ def bandpass_filter(signal, fs, fc, BW, order=200):
     """
     Designs and applies a bandpass FIR filter to the input signal.
 
+    The filter is centered at the given frequency `fc` and spans the specified
+    bandwidth `BW`. It uses a linear-phase FIR design with the given filter order.
 
     Parameters
     ----------
-    signal : Input signal (1D array)
-    fs : Sampling frequency
-    fc : Center frequency of the bandpass filter
-    BW : Bandwidth of the bandpass filter
-    order : Filter order (default 200)
-
+    signal : ndarray
+        Input time-domain signal (1D array).
+    fs : float
+        Sampling frequency of the signal in Hz.
+    fc : float
+        Center frequency of the bandpass filter in Hz.
+    BW : float
+        Bandwidth of the bandpass filter in Hz.
+    order : int, optional
+        Filter order (default is 200). Determines the sharpness of the filter.
+    
     Returns
     -------
-    Filtered signal
+    filtered_signal : ndarray
+        The signal after applying the bandpass FIR filter.
     """
+    # Calculate the Nyquist frequency
     nyquist = fs / 2
+
+    # Compute normalized cutoff frequencies and clip to safe range
+    # Avoid 0 and 1 to prevent firwin from throwing errors
     lowcut = np.max([0.000000001, (fc - BW / 2) / nyquist])
     highcut = np.min([0.99999999, (fc + BW / 2) / nyquist])
+
+    # Debug prints (can be removed in production)
     print('Fs: {}'.format(fs))
     print('Fc: {}'.format(fc))
     print('Nyquist: {}'.format(nyquist))
     print('Lowcut: {}'.format(lowcut))
     print('Highcut: {}'.format(highcut))
     print('signal : {}'.format(signal))
-    # Design the bandpass FIR filter
+
+    # Design the FIR filter using the window method
     taps = scipy.signal.firwin(order + 1, [lowcut, highcut], pass_zero=False)
 
-    # Apply the filter to the signal
+    # Apply FIR filter using direct-form linear convolution
     filtered_signal = scipy.signal.lfilter(taps, 1.0, signal)
 
     return filtered_signal
@@ -84,8 +109,14 @@ def downsample(x, fs_now, fs_resampled):
         The resampled signal with a new number of samples based on the ratio 
         `fs_resampled / fs_now`.
     """
+    # Get the current length of the signal
     N_now = len(x)
+
+    # Calculate the target number of samples after resampling
+    # Proportional to the ratio of new sampling rate to the original rate
     N_resampled = int(fs_resampled/fs_now * N_now)
+
+    # Resample the signal to the target number of samples
     return scipy.signal.resample(x, N_resampled)
 
 
@@ -113,9 +144,14 @@ def vandermonde(t, w0, L):
         cosine terms for each harmonic frequency up to `L`. The first `L`
         columns are sine terms, and the last `L` columns are cosine terms.
    """
-
+    # Compute cosine terms for harmonics 1 to L
     c = np.cos(np.outer(t*w0, np.arange(1, L+1)))
+
+    # Compute sine terms for harmonics 1 to L
     s = np.sin(np.outer(t*w0, np.arange(1, L+1)))
+
+    # Stack sine and cosine terms horizontally to form the final matrix
+    # Shape: (N, 2L) where first L coumns are sine, last L are cosine
     Z = np.hstack((s, c))
 
     return Z
@@ -154,14 +190,25 @@ def nls(x, L, t, fs, f_start, f_end, fast=True, num_points=5000):
         The computed cost function values for each frequency in `f0_grid`,
         of shape (K,).
     """
+    # Ensure x is a column vector and initialize the cost arry
     x, J = x.reshape(-1, 1), np.zeros(num_points)
+
+    # Create a frequency grid from f_start to f_end
     f0_grid = np.linspace(f_start, f_end, num_points)
+
+    # Iterate through each frequency candidate
     for i, f0 in enumerate(f0_grid):
+        # Construct the model matrix (harmonic basis) for the current frequency
         Z = vandermonde(t, f0*2*np.pi, L)
+
+        # Solve the least squares problem to get the model coefficients
         a_hat = scipy.linalg.lstsq(Z, x, lapack_driver="gelsy")[0]
+
+        # Compute cost function J: optionally use fast approximation
         if fast:
             J[i] = (x.T @ Z @ np.eye(Z.shape[1], Z.shape[1]) @ Z.T @ x)
         else:
+            # Exact cost using estimated coefficients
             J[i] = x @ Z @ a_hat
 
     return f0_grid, J

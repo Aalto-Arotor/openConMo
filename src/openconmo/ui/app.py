@@ -1,8 +1,8 @@
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
-from layouts import create_left_panel
-from callbacks import register_callbacks
+from openconmo.ui.layouts import create_left_panel
+from openconmo.ui.callbacks import register_callbacks
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
@@ -28,5 +28,8 @@ app.layout = html.Div([
 # Register callbacks
 register_callbacks(app)
 
+def main():
+    app.run_server(debug=True)
+
 if __name__ == '__main__':
-    app.run_server(debug=True) 
+    main()

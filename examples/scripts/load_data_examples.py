@@ -1,4 +1,4 @@
-import data_utils as du
+import examples.scripts.data_utils as du
 
 ########
 # CWRU #
@@ -7,7 +7,7 @@ import data_utils as du
 print("CWRU")
 print("----")
 
-# Load data
+# Load data from feather
 CWRU_data = du.get_CWRU_data()
 
 # To iterate through all data
@@ -18,15 +18,16 @@ print()
 
 for i, row in CWRU_data.iterrows():
     print(
-        f"{row['measurement location']}, {row['fault location']}, {row['fault diameter']} mils, {row['fault orientation']}, {row['sampling rate']} kHz, {row['motor load']} HP"
+        f"{row['measurement location']}, {row['fault location']}, {row['fault depth']} mils, {row['fault type']}, {row['sampling rate']} Hz, {row['torque']} HP"
     )
     print(f"Measurement shape: {row['measurement'].shape}")
     # break  # ! Remove this to go through all rows
 
 print()
 print()
+
 # To get one sample
-sample, rpm, tags = du.get_CWRU_measurement("DE", "DE", "ir", 7, "-", 12, 1)
+sample, rpm, tags = du.get_CWRU_measurement("DE", "DE", "IR", 7, "-", 12, 1)
 print(f"Sample shape: {sample.shape}")
 print(f"Sample rpm: {rpm}")
 print(f"Sample tags: {tags}")

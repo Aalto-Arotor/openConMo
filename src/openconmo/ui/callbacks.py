@@ -1,17 +1,14 @@
-import sys
-sys.path.append('../')
-from src.randall_methods import randall_method_1, randall_method_2, randall_method_3
-from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
-from utils import read_from_parquet
+from openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
+from openconmo.ui.figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
+from openconmo.ui.utils import read_from_parquet
 
 from dash.dependencies import Input, Output
 from dash import html
 import dash_mantine_components as dmc
 import numpy as np
 
-
-
 def register_callbacks(app):
+    '''Register all Dash app callbacks for plot updates and metadata display.'''
     @app.callback(
         [Output('time-plot', 'figure'),
          Output('frequency-plot', 'figure'),
@@ -34,7 +31,8 @@ def register_callbacks(app):
     def update_plots(contents, dropdown_value, time_start, time_stop, 
                     x_lim_1, x_lim_2, y_lim_1, y_lim_2,
                     ff_hz, n_harmonics, f_sb_hz, freq_scale, amp_scale):
-        
+        '''Update time, frequency, and envelope plots based on uploaded data and user-selected parameters.'''
+
         if contents is None:
             dummy_fig = create_dummy_figure("Upload a file")
             return dummy_fig, dummy_fig, dummy_fig
@@ -63,12 +61,15 @@ def register_callbacks(app):
                 print("Method 2\n")
             elif dropdown_value == "3":
                 print("Method 3\n")
+            
+            
 
             
             envelope_plot = create_envelope_spectrum_plot(signal_slice, fs, title=title_envelope, unit=unit)
             
             
             def add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz):
+                '''Overlay harmonic and optional sideband lines on a frequency-domain plot.'''
                 if not (ff_hz and n_harmonics and ff_hz > 0):
                     return
 
@@ -92,6 +93,7 @@ def register_callbacks(app):
                         add_sideband_lines(plot, harmonic_freq, f_sb_hz)
 
             def add_sideband_lines(plot, harmonic_freq, f_sb_hz):
+                '''Add sideband lines around a given harmonic frequency on the plot.'''
                 for offset, label in [(-f_sb_hz, 'SB-'), (f_sb_hz, 'SB+')]:
                     freq = harmonic_freq + offset
                     plot['data'].append({
@@ -107,6 +109,7 @@ def register_callbacks(app):
                     })
 
             def update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale):
+                '''Adjust x and y axis ranges and scaling types based on user input.'''
                 if x_lim_1 is not None and x_lim_2 is not None and x_lim_1 < x_lim_2:
                     if freq_scale == 'log':
                         plot['layout']['xaxis']['range'] = [np.log10(max(1e-10, x_lim_1)), np.log10(x_lim_2)]
@@ -142,6 +145,7 @@ def register_callbacks(app):
         [Input('upload-data', 'contents')]
     )
     def update_metadata(contents):
+        '''Display signal metadata from uploaded file in a formatted table.'''
         if contents is None:
             return [dmc.Text("No file uploaded yet", c="dimmed")]
         

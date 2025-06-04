@@ -51,6 +51,42 @@ import matplotlib.pyplot as plt
 import scipy.io
 
 def fast_kurtogram(x,fs,nlevel=7, verbose=False):
+    """
+    (Compute the fast kurtogram of a signal using wavelet packet decomposition.
+
+    This implementation is adapted from Jerome Antoni's fast kurtogram algorithm,
+    and uses a recursive quadrature mirror filter bank to estimate spectral kurtosis
+    over different frequency bands.) Needs to be analyzed further
+
+    Parameters
+    ----------
+    x : ndarray
+        Input signal (1D array). Should be a real-valued or complex-valued signal.
+    fs : float
+        Sampling frequency of the signal in Hz.
+    nlevel : int, optional
+        Number of decomposition levels (default is 7). Must be small enough to satisfy the signal length requirement.
+    verbose : bool, optional
+        If True, prints additional information about the maximum kurtosis and corresponding frequency.
+
+    Returns
+    -------
+    Kwav : ndarray
+        2D array representing the kurtosis map over the wavelet packet decomposition levels and subbands.
+    Level_w : ndarray
+        1D array of decomposition levels corresponding to the rows of `Kwav`.
+    freq_w : ndarray
+        1D array of center frequencies corresponding to the columns of `Kwav`.
+    fc : float
+        Center frequency (in Hz) of the subband with the highest kurtosis.
+    bandwidth : float
+        Bandwidth (in Hz) of the optimal subband with maximum kurtosis.
+
+    Raises
+    ------
+    ValueError
+        If the number of decomposition levels exceeds the limit based on input signal length.
+    """
     N = x.flatten().size
     N2 = np.log2(N) - 7
     if nlevel > N2:
@@ -98,7 +134,7 @@ def fast_kurtogram(x,fs,nlevel=7, verbose=False):
     return Kwav, Level_w, freq_w, fc, bandwidth
 
 def _kurt(this_x,opt):
-
+    """Compute kurtosis of a signal using method 'kurt1' or 'kurt2'."""
     eps = 2.2204e-16
 
     if opt.lower() == 'kurt2':
@@ -135,12 +171,14 @@ def _kurt(this_x,opt):
 
 
 def _K_wpQ(x,h,g,h1,h2,h3,nlevel,opt,level=None):
-    '''
-    Computes the kurtosis K of the complete "binary-ternary" wavelet
-    packet transform w of signal x, up to nlevel, using the lowpass
-    and highpass filters h and g, respectively. The values in K are
-    sorted according to the frequency decomposition.
-    '''
+    """
+    Compute the kurtosis matrix K from a binary-ternary wavelet packet transform of a signal.
+
+    Performs decomposition of the input signal x up to nlevel using lowpass
+    and highpass filters (h and g). The resulting kurtosis values K are sorted
+    according to the frequency decomposition.
+    """
+
     if level == None:
         level = nlevel
     x = x.flatten()
@@ -161,6 +199,12 @@ def _K_wpQ(x,h,g,h1,h2,h3,nlevel,opt,level=None):
     return K
 
 def _K_wpQ_local(x,h,g,h1,h2,h3,nlevel,opt,level):
+    """
+    Recursive helper for computing the kurtosis tree at each level.
+
+    Decomposes signal using binary and ternary filter banks and collects
+    kurtosis values for each node in the tree.
+    """
 
     a,d = _DBFB(x,h,g)
     N = np.amax(a.shape)
@@ -237,6 +281,7 @@ def _K_wpQ_local(x,h,g,h1,h2,h3,nlevel,opt,level):
 
 
 def _TBFB(x,h1,h2,h3):
+    """Apply ternary filter bank to input signal and return 3 subbands."""
     N = x.flatten().size
     a1 = lfilter(h1,1,x.flatten())
     a1 = a1[2:N:3]
@@ -254,6 +299,7 @@ def _TBFB(x,h1,h2,h3):
 
 
 def _DBFB(x,h,g):
+    """Apply binary filter bank to input signal and return low and high subbands."""
     N = x.flatten().size
     a = lfilter(h,1,x.flatten())
     a = a[1:N:2]
@@ -265,6 +311,22 @@ def _DBFB(x,h,g):
     return a,d
 
 def binary(i,k):
+    """
+    Convert an integer to its binary representation with fixed length.
+
+    Parameters
+    ----------
+    x : int
+        The integer to convert.
+    n : int
+        The number of binary digits (bits) in the output.
+
+    Returns
+    -------
+    list of int
+        A list of binary digits (0 or 1), with length `n`, representing `x`.
+        Most significant bit is first.
+    """
     k = int(k)
     if i > 2**k:
         raise ValueError('i must be such that i < 2^k')
@@ -276,45 +338,72 @@ def binary(i,k):
 
     return a
 
-if __name__ == "__main__":
-    import scipy.io
-    import matplotlib.pyplot as plt
+def plot_kurtogram(data, sampling_rate, nlevel=9, verbose=False):
+    """
+    Plots the kurtogram for a given signal data.
 
-    # Load the data
-    data = scipy.io.loadmat('src/matlab_example_data/outer_fault.mat')
-    data = data['xOuter'].squeeze()
-    samplingRate = 97656
+    Parameters
+    ----------
+    data : array_like
+        Input signal data (should be a 1D array or a 2D array).
+    
+    sampling_rate : float
+        Sampling rate of the signal in Hz.
+    
+    nlevel : int, optional
+        The number of decomposition levels for the kurtogram. Default is 9.
+    
+    verbose : bool, optional
+        If True, prints additional information. Default is False.
 
-    # Run fast kurtogram
-    Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, samplingRate, nlevel=9, verbose=True)
+    Returns
+    -------
+    None
+        This function does not return any value, but generates a plot of the kurtogram.
+    """
+    # Run the fast kurtogram function
+    Kwav, Level_w, freq_w, fc, bandwidth = fast_kurtogram(data, sampling_rate, nlevel=nlevel, verbose=verbose)
 
-    # Define decomposition levels and corresponding window lengths
-    levels = list(range(10))  # Levels 0 to 9
-    display_levels = list(reversed(levels))  # For labeling top (0) to bottom (9)
+    # Calculate the transformation for the y-axis 
+    Level_w_transformed = np.array([0] + [(i + np.log2(3) - 1) for i in range(1, 2 * len(Level_w))])
 
-    # Generate window lengths (2 to 1024) and reverse to match visual order
-    win_lengths = [2**(i+1) for i in levels]           # [2, 4, ..., 1024]
-    win_lengths = list(reversed(win_lengths))          # [1024, ..., 2]
+    # Define the frequency in kHz for the x-axis
+    freq_w_kHz = freq_w / 1000  # Convert frequency from Hz to kHz
 
-    # Create y-tick labels: e.g. "0 (1024)", "1 (512)", ..., "9 (2)"
-    ytick_labels = [f'{lvl} ({wl})' for lvl, wl in zip(display_levels, win_lengths)]
+    # Calculate the window lengths based on 2^(n+1)
+    win_lengths = [2**(Level_w[i]+1) for i in range(len(Level_w))]
+
+    # Create y-tick labels (Decomposition level and corresponding window length)
+    ytick_labels = [f'{lvl:.1f} ({wl:.0f})' for lvl, wl in zip(Level_w, win_lengths)]
 
     # Plot the kurtogram
     plt.figure(figsize=(10, 6))
-    im = plt.imshow(Kwav, aspect='auto',
-                    extent=(freq_w[0] / 1000, freq_w[-1] / 1000, 0, len(levels)-1),
-                    interpolation='none', origin='upper')  # top-to-bottom layout
 
-    # Colorbar and axis labels
+    # Use imshow to plot the kurtogram (with aspect ratio and proper extent)
+    im = plt.imshow(Kwav, aspect='auto',
+                    extent=(freq_w_kHz[0], freq_w_kHz[-1], 0, len(Level_w)-1),
+                    interpolation='none', origin='upper')  # Origin at the top (to match MATLAB)
+
+    # Add colorbar
     cbar = plt.colorbar(im)
     cbar.set_label('Spectral Kurtosis', fontsize=14)
 
+    # Label x and y axes
     plt.xlabel('Frequency [kHz]', fontsize=12)
     plt.ylabel('Decomposition Level (Window Length)', fontsize=12)
-    plt.title('Kurtogram and Spectral Kurtosis for Band Selection', fontsize=10, pad=10)
 
-    # Set custom y-ticks
-    plt.yticks(ticks=levels, labels=ytick_labels)
+    # Title with dynamic values
+    max_level_index = np.argmax(Kwav[np.arange(Kwav.shape[0]), np.argmax(Kwav, axis=1)])
+    max_kurt = np.amax(Kwav[np.arange(Kwav.shape[0]), np.argmax(Kwav, axis=1)])
+    level_max = Level_w[max_level_index]
+    Bw = sampling_rate * 2**-(Level_w[0] + 1)  # Bandwidth calculation
 
+    plt.title(f'K_max={max_kurt:.4f} at level {level_max:.1f}, Optimal Window Length={2**(Level_w[max_level_index]+1):.0f}, Center Frequency={fc/1000:.4f} kHz, Bandwidth={bandwidth/1000:.5f} kHz', fontsize=10, pad=10)
+
+    # Set custom y-ticks based on decomposition levels and window lengths
+    yticks_position = np.linspace(len(Level_w)-1 - 0.5, 0.5, len(Level_w))
+    plt.yticks(ticks=yticks_position, labels=ytick_labels)
+
+    # Display the plot
     plt.tight_layout()
     plt.show()
