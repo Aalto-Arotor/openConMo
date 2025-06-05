@@ -310,22 +310,9 @@ def _DBFB(x,h,g):
 
     return a,d
 
-def binary(i,k):
+def _binary(i,k):
     """
     Convert an integer to its binary representation with fixed length.
-
-    Parameters
-    ----------
-    x : int
-        The integer to convert.
-    n : int
-        The number of binary digits (bits) in the output.
-
-    Returns
-    -------
-    list of int
-        A list of binary digits (0 or 1), with length `n`, representing `x`.
-        Most significant bit is first.
     """
     k = int(k)
     if i > 2**k:

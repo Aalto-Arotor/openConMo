@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; openConMo 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            openConMo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-openconmo.benchmark_methods">benchmark_methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.benchmark_methods.DRS"><code class="docutils literal notranslate"><span class="pre">DRS()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.benchmark_methods.benchmark_method"><code class="docutils literal notranslate"><span class="pre">benchmark_method()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.benchmark_methods.cepstrum_prewhitening"><code class="docutils literal notranslate"><span class="pre">cepstrum_prewhitening()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.benchmark_methods.envelope"><code class="docutils literal notranslate"><span class="pre">envelope()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-openconmo.kurtogram">kurtogram</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.kurtogram.fast_kurtogram"><code class="docutils literal notranslate"><span class="pre">fast_kurtogram()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.kurtogram.plot_kurtogram"><code class="docutils literal notranslate"><span class="pre">plot_kurtogram()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-openconmo.utils">utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.utils.bandpass_filter"><code class="docutils literal notranslate"><span class="pre">bandpass_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.utils.downsample"><code class="docutils literal notranslate"><span class="pre">downsample()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.utils.nls"><code class="docutils literal notranslate"><span class="pre">nls()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.utils.oneside_fft"><code class="docutils literal notranslate"><span class="pre">oneside_fft()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#openconmo.utils.vandermonde"><code class="docutils literal notranslate"><span class="pre">vandermonde()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">openConMo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p><a class="reference external" href="index.html">Home</a></p>
+<section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<section id="module-openconmo.benchmark_methods">
+<span id="benchmark-methods"></span><h2>benchmark_methods<a class="headerlink" href="#module-openconmo.benchmark_methods" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.benchmark_methods.DRS">
+<span class="sig-prename descclassname"><span class="pre">openconmo.benchmark_methods.</span></span><span class="sig-name descname"><span class="pre">DRS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.benchmark_methods.DRS" title="Link to this definition"></a></dt>
+<dd><p>Discrete/Random Separation (DRS) to remove deterministic components.</p>
+<p>This method separates a signal into deterministic and random parts
+by constructing a frequency-domain filter based on delayed cross-power spectra.
+The approach is based on:
+“Unsupervised Noise Cancellation for Vibration Signals: Part II—
+A Novel Frequency-Domain Algorithm.” <a class="reference external" href="https://doi.org/10.1016/S0888-3270(03)00013-X">https://doi.org/10.1016/S0888-3270(03)00013-X</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>ndarray</em>) – The input time-domain signal.</p></li>
+<li><p><strong>N</strong> (<em>int</em>) – Window length used for spectral estimation.</p></li>
+<li><p><strong>Delta</strong> (<em>int</em>) – Delay applied to the signal in the cross-correlation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>random_part</strong> (<em>ndarray</em>) – The component of the signal with deterministic content removed.</p></li>
+<li><p><strong>deterministic_part</strong> (<em>ndarray</em>) – The reconstructed deterministic (periodic/discrete frequency) part of the signal.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.benchmark_methods.benchmark_method">
+<span class="sig-prename descclassname"><span class="pre">openconmo.benchmark_methods.</span></span><span class="sig-name descname"><span class="pre">benchmark_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16384</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlevel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.benchmark_methods.benchmark_method" title="Link to this definition"></a></dt>
+<dd><p>Fault detection using DRS, kurtogram-based filtering, and envelope analysis.</p>
+<p>The approach is based on:
+“Rolling elment bearing diagnostics using the Case Western Reserve University data: A benchmark study” <a class="reference external" href="https://doi.org/10.1016/j.ymssp.2015.04.021">https://doi.org/10.1016/j.ymssp.2015.04.021</a></p>
+<p>This method combines three steps for enhancing impulsive features in vibration signals:
+1. Discrete/Random Separation (DRS) to remove deterministic frequency components.
+2. Spectral kurtosis analysis via a fast kurtogram to select the most impulsive frequency band.
+3. Envelope analysis (squared envelope spectrum) of the filtered signal to extract fault signatures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>ndarray</em>) – Input time-domain signal.</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+<li><p><strong>N</strong> (<em>int</em><em>, </em><em>optional</em>) – Length of the window used for DRS filtering (default is 16384).</p></li>
+<li><p><strong>Delta</strong> (<em>int</em><em>, </em><em>optional</em>) – Overlap or shift value used in DRS (default is 500).</p></li>
+<li><p><strong>nlevel</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of decomposition levels used in the fast kurtogram (default is 2).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>t</strong> (<em>ndarray</em>) – Time vector corresponding to the filtered signal after DRS.</p></li>
+<li><p><strong>filtered_signal</strong> (<em>ndarray</em>) – Signal after DRS and kurtogram-based bandpass filtering.</p></li>
+<li><p><strong>f</strong> (<em>ndarray</em>) – Frequency vector of the squared envelope spectrum.</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em>) – Amplitude of the squared envelope spectrum.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.benchmark_methods.cepstrum_prewhitening">
+<span class="sig-prename descclassname"><span class="pre">openconmo.benchmark_methods.</span></span><span class="sig-name descname"><span class="pre">cepstrum_prewhitening</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.benchmark_methods.cepstrum_prewhitening" title="Link to this definition"></a></dt>
+<dd><p>Apply cepstrum editing (liftering) for signal pre-whitening.</p>
+<p>This method performs signal pre-whitening using cepstrum editing, as described in
+“Signal Pre-whitening Using Cepstrum Editing (Liftering) to Enhance Fault Detection
+in Rolling Element Bearings.”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>ndarray</em>) – The input time-domain signal.</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>t</strong> (<em>ndarray</em>) – Time vector corresponding to the reconstructed signal.</p></li>
+<li><p><strong>time_signal</strong> (<em>ndarray</em>) – Time-domain signal after cepstrum-based pre-whitening.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.benchmark_methods.envelope">
+<span class="sig-prename descclassname"><span class="pre">openconmo.benchmark_methods.</span></span><span class="sig-name descname"><span class="pre">envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.benchmark_methods.envelope" title="Link to this definition"></a></dt>
+<dd><p>Perform squared envelope spectrum analysis of a signal.</p>
+<p>This method applies envelope analysis using the squared envelope spectrum
+of the full-bandwidth signal. It is suitable when there are no strong
+masking sources in the signal, and bearing faults can be diagnosed directly.
+Often used as a simple baseline in fault detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>ndarray</em>) – The input raw signal.</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>f</strong> (<em>ndarray</em>) – Frequency vector corresponding to the squared envelope spectrum.</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em>) – Amplitude of the squared envelope spectrum.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-openconmo.kurtogram">
+<span id="kurtogram"></span><h2>kurtogram<a class="headerlink" href="#module-openconmo.kurtogram" title="Link to this heading"></a></h2>
+<p>Copyright (c) 2015, Jerome Antoni
+All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.</p></li>
+<li><p>Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in
+the documentation and/or other materials provided with the distribution</p></li>
+</ul>
+</div></blockquote>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.kurtogram.fast_kurtogram">
+<span class="sig-prename descclassname"><span class="pre">openconmo.kurtogram.</span></span><span class="sig-name descname"><span class="pre">fast_kurtogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlevel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.kurtogram.fast_kurtogram" title="Link to this definition"></a></dt>
+<dd><p>(Compute the fast kurtogram of a signal using wavelet packet decomposition.</p>
+<p>This implementation is adapted from Jerome Antoni’s fast kurtogram algorithm,
+and uses a recursive quadrature mirror filter bank to estimate spectral kurtosis
+over different frequency bands.) Needs to be analyzed further</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – Input signal (1D array). Should be a real-valued or complex-valued signal.</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+<li><p><strong>nlevel</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of decomposition levels (default is 7). Must be small enough to satisfy the signal length requirement.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, prints additional information about the maximum kurtosis and corresponding frequency.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>Kwav</strong> (<em>ndarray</em>) – 2D array representing the kurtosis map over the wavelet packet decomposition levels and subbands.</p></li>
+<li><p><strong>Level_w</strong> (<em>ndarray</em>) – 1D array of decomposition levels corresponding to the rows of <cite>Kwav</cite>.</p></li>
+<li><p><strong>freq_w</strong> (<em>ndarray</em>) – 1D array of center frequencies corresponding to the columns of <cite>Kwav</cite>.</p></li>
+<li><p><strong>fc</strong> (<em>float</em>) – Center frequency (in Hz) of the subband with the highest kurtosis.</p></li>
+<li><p><strong>bandwidth</strong> (<em>float</em>) – Bandwidth (in Hz) of the optimal subband with maximum kurtosis.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of decomposition levels exceeds the limit based on input signal length.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.kurtogram.plot_kurtogram">
+<span class="sig-prename descclassname"><span class="pre">openconmo.kurtogram.</span></span><span class="sig-name descname"><span class="pre">plot_kurtogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlevel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.kurtogram.plot_kurtogram" title="Link to this definition"></a></dt>
+<dd><p>Plots the kurtogram for a given signal data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>array_like</em>) – Input signal data (should be a 1D array or a 2D array).</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em>) – Sampling rate of the signal in Hz.</p></li>
+<li><p><strong>nlevel</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of decomposition levels for the kurtogram. Default is 9.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, prints additional information. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>This function does not return any value, but generates a plot of the kurtogram.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-openconmo.utils">
+<span id="utils"></span><h2>utils<a class="headerlink" href="#module-openconmo.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.utils.bandpass_filter">
+<span class="sig-prename descclassname"><span class="pre">openconmo.utils.</span></span><span class="sig-name descname"><span class="pre">bandpass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BW</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.utils.bandpass_filter" title="Link to this definition"></a></dt>
+<dd><p>Designs and applies a bandpass FIR filter to the input signal.</p>
+<p>The filter is centered at the given frequency <cite>fc</cite> and spans the specified
+bandwidth <cite>BW</cite>. It uses a linear-phase FIR design with the given filter order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>ndarray</em>) – Input time-domain signal (1D array).</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+<li><p><strong>fc</strong> (<em>float</em>) – Center frequency of the bandpass filter in Hz.</p></li>
+<li><p><strong>BW</strong> (<em>float</em>) – Bandwidth of the bandpass filter in Hz.</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter order (default is 200). Determines the sharpness of the filter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>filtered_signal</strong> – The signal after applying the bandpass FIR filter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.utils.downsample">
+<span class="sig-prename descclassname"><span class="pre">openconmo.utils.</span></span><span class="sig-name descname"><span class="pre">downsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs_now</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs_resampled</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.utils.downsample" title="Link to this definition"></a></dt>
+<dd><p>Downsamples or upsamples a signal to a new sampling frequency.</p>
+<p>This function resamples the input signal <cite>x</cite> from its current sampling
+frequency <cite>fs_now</cite> to a new target sampling frequency <cite>fs_resampled</cite>.
+The signal is resampled by changing the number of samples based on the
+ratio of the two frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Input signal to be resampled, of shape (N,).</p></li>
+<li><p><strong>fs_now</strong> (<em>float</em>) – Current sampling frequency of the input signal <cite>x</cite>.</p></li>
+<li><p><strong>fs_resampled</strong> (<em>float</em>) – Target sampling frequency to which the signal should be resampled.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The resampled signal with a new number of samples based on the ratio
+<cite>fs_resampled / fs_now</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.utils.nls">
+<span class="sig-prename descclassname"><span class="pre">openconmo.utils.</span></span><span class="sig-name descname"><span class="pre">nls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.utils.nls" title="Link to this definition"></a></dt>
+<dd><p>Non-linear least squares (NLS) estimation to fit a signal to a specified
+model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em>) – Input signal to be fitted, of shape (N, 1).</p></li>
+<li><p><strong>L</strong> (<em>int</em>) – Model order, which determines the number of harmonics</p></li>
+<li><p><strong>t</strong> (<em>np.ndarray</em>) – Time vector of shape (N,), representing the time points of the signal.</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal <cite>x</cite>.</p></li>
+<li><p><strong>fast</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, uses a faster but approximate computation of the cost function
+<cite>J</cite>. Default is True.</p></li>
+<li><p><strong>f_start</strong> (<em>float</em>) – Starting frequency for the output</p></li>
+<li><p><strong>f_end</strong> (<em>float</em>) – End frequency for the output</p></li>
+<li><p><strong>num_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of frequency points in the grid for <cite>f0_grid</cite>. Default is 5000.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>f0_grid</strong> (<em>np.ndarray</em>) – The frequency grid used for fitting, of shape (num_points,).</p></li>
+<li><p><strong>J</strong> (<em>np.ndarray</em>) – The computed cost function values for each frequency in <cite>f0_grid</cite>,
+of shape (K,).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.utils.oneside_fft">
+<span class="sig-prename descclassname"><span class="pre">openconmo.utils.</span></span><span class="sig-name descname"><span class="pre">oneside_fft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.utils.oneside_fft" title="Link to this definition"></a></dt>
+<dd><p>Compute the one-sided FFT (magnitude spectrum) of a real-valued signal.</p>
+<p>This function returns the positive frequency components of the discrete
+Fourier transform (DFT) of the input signal, scaled appropriately for
+power analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>ndarray</em>) – Input time-domain signal (real-valued).</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency of the signal in Hz.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>freqs</strong> (<em>ndarray</em>) – Array of positive frequency values in Hz.</p></li>
+<li><p><strong>spectrum</strong> (<em>ndarray</em>) – One-sided magnitude spectrum of the input signal.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="openconmo.utils.vandermonde">
+<span class="sig-prename descclassname"><span class="pre">openconmo.utils.</span></span><span class="sig-name descname"><span class="pre">vandermonde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openconmo.utils.vandermonde" title="Link to this definition"></a></dt>
+<dd><p>Constructs a Vandermonde-like matrix for sinusoidal modeling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>np.ndarray</em>) – Time vector of shape (N,), representing the time points at which the
+model is evaluated.</p></li>
+<li><p><strong>w0</strong> (<em>float</em>) – Base angular frequency (in radians per second) for generating the sine
+and cosine terms.</p></li>
+<li><p><strong>L</strong> (<em>int</em>) – Model order, which determines the number of harmonics (terms) in the
+Vandermonde matrix. The matrix will include terms for the first <cite>L</cite>
+harmonics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Z</strong> – The Vandermonde-like matrix of shape (N, 2*L), containing both sine and
+cosine terms for each harmonic frequency up to <cite>L</cite>. The first <cite>L</cite>
+columns are sine terms, and the last <cite>L</cite> columns are cosine terms.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen, Elmo Laine.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -14,9 +14,19 @@ install:
 	$(PIP) install -e .
 	$(PIP) install -r requirements.txt
 
-
 ui:
 	openconmo-ui
+
+# ---------------------------
+# Documentation
+# ---------------------------
+
+docs-html:
+	$(VENV)/bin/sphinx-build -b html docs docs/_build/html
+
+
+docs-open:
+	xdg-open docs/_build/html/index.html || open docs/_build/html/index.html
 
 # ---------------------------
 # Maintenance
@@ -28,5 +38,6 @@ clean:
 	rm -rf dist build .pytest_cache
 	find . -type d -iname "*.egg-info" -exec rm -rf {} +
 	find . -type d -name ".ipynb_checkpoints" -exec rm -rf {} +
+	rm -rf docs/_build
 
-.PHONY: install test notebook ui clean
+.PHONY: install test notebook ui clean docs-html docs-clean docs-open

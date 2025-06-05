@@ -34,16 +34,13 @@ Possible tags (from [Rolling element bearing diagnostics using the Case Western 
 `identical_DE_and_FE` - measurements from DE and FE sensors are identical except with a scaling factor
 
 ## Run notebooks
-* Notebook 1: "CWRU_example.ipynb", reproducing results of "[Rolling element bearing diagnostics using the Case Western Reserve University data: A benchmark study](http://dx.doi.org/10.1016/j.ymssp.2015.04.021)" by Smith & Randall
+* Notebook 1: "smith_randall_example.ipynb", reproducing results of "[Rolling element bearing diagnostics using the Case Western Reserve University data: A benchmark study](http://dx.doi.org/10.1016/j.ymssp.2015.04.021)" by Smith & Randall
 * Notebook 2: "matlab_example.ipynb", reproducing results of "[Rolling Element Bearing Fault Diagnosis](https://www.mathworks.com/help/predmaint/ug/Rolling-Element-Bearing-Fault-Diagnosis.html)"
 
-## Requirements:
-* Numpy
-* Pandas
-* Scipy
-* PyArrow (for loading datasets)
+# Documentation
+
+See [Documentation](https://aalto-arotor.github.io/openConMo/)
 
 ## Authors
-This software is autored and maintained by Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen and Elmo Laine, Mechatronics research group, Aalto University.
-Please email questions to 
-arotor.software@aalto.fi
+This software is authored and maintained by Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen and Elmo Laine, Mechatronics research group, Aalto University.
+Please email questions to arotor.software@aalto.fi

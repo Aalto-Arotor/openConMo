@@ -73,6 +73,7 @@ nest-asyncio==1.6.0
 notebook==7.4.2
 notebook_shim==0.2.4
 numpy==2.2.3
+-e git+https://github.com/Aalto-Arotor/openConMo.git@0ac08cdacbcece2ff1b9c9b9c93922d07bbafc10#egg=openConMo
 overrides==7.7.0
 packaging==24.2
 pandas==2.2.3
