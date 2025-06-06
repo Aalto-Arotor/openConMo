@@ -183,17 +183,17 @@ def get_CWRU_data():
 
     Returns:
         cwru_data: pd.DataFrame - Columns
-            'measurement location': str - 'DE' -> Drive End, 'FE' -> Fan End
+            'measurement location': str - 'DE' -> Drive End, 'FE' -> Fan End, 'BA' -> Base plate
             'fault location': str - 'DE' -> Drive End, 'FE' -> Fan End
-            'fault type': str - 'ir' -> Inner Ring, 'or' -> Outer Ring, 'b' -> ball
+            'fault type': str - 'IR' -> Inner Ring, 'OR' -> Outer Ring, 'B' -> ball
             'fault diameter': int - in mils, e.g. 7 = 0.007
-            'fault orientation': str - '-' -> N/A, 'c' -> center/12 o'clock, 'or' -> orthogonal, 'op' -> opposite
-            'sampling rate': int - in kHz
-            'motor load': int - in HP
+            'fault orientation': str - '-' -> N/A, 'C' -> center/12 o'clock, 'OR' -> orthogonal, 'OP' -> opposite
+            'sampling rate': int - in kHz (12 or 48)
+            'motor load': int - in HP (0, 1, 2, and 3)
             'tags': list[str]
     """
     return pd.read_feather(
-        os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "data", "CWRU_openCoMo.feather"))
+        os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "data", "CWRU", "CWRU.feather"))
     )
 
 
