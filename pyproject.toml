@@ -4,14 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openconmo"
-version =  "0.0.0"
+version =  "0.0.5"
 description = "A Python package for vibration signal based condition monitoring"
+readme = { file = "README.md", content-type = "text/markdown" }
 authors = [
     { name = "Sampo Laine"},
     { name = "Sampo Haikonen"},
     { name = "Aleksanteri Hämäläinen"},
     { name = "Elmo Laine"}
 ]
+
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -29,7 +31,6 @@ dependencies = [
     "matplotlib>=3.10.0,<4.0.0",
     "tqdm>=4.67.1,<5.0.0",
     "pyarrow==19.0.0",
-    "openconmo"
 ]
 
 [project.urls]
