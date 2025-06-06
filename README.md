@@ -1,9 +1,20 @@
-# openConMo
-This is a Python library for vibration signal based condition monitoring library developed in Aalto University, Finland. The objectives of this library are as follows:
+<p align="center">
+  <img src="docs/openconmo_logo.png" alt="logo" width="60%">
+</p>
+
+
+# OpenConMo
+Python library for vibration signal–based condition monitoring, developed at Aalto University, Finland.  
+The objectives of the library are:
 
 1. Provide easy access to reproducing signal based condition monitoring papers
 2. Enable comparison of AI/ML based techniques with conventional signal processing tools
 
+## Installation
+
+Install the latest version from PyPI:
+
+```pip install openconmo ```
 
 ## Install and load datasets
 
@@ -37,9 +48,15 @@ Possible tags (from [Rolling element bearing diagnostics using the Case Western 
 * Notebook 1: "smith_randall_example.ipynb", reproducing results of "[Rolling element bearing diagnostics using the Case Western Reserve University data: A benchmark study](http://dx.doi.org/10.1016/j.ymssp.2015.04.021)" by Smith & Randall
 * Notebook 2: "matlab_example.ipynb", reproducing results of "[Rolling Element Bearing Fault Diagnosis](https://www.mathworks.com/help/predmaint/ug/Rolling-Element-Bearing-Fault-Diagnosis.html)"
 
-# Documentation
+## Documentation
 
-See [Documentation](https://aalto-arotor.github.io/openConMo/)
+See [openconmo documentation](https://aalto-arotor.github.io/openConMo/) for documentation.
+
+## Requirements
+* Numpy
+* Pandas
+* Scipy
+* PyArrow (for loading datasets)
 
 ## Authors
 This software is authored and maintained by Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen and Elmo Laine, Mechatronics research group, Aalto University.

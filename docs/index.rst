@@ -4,6 +4,10 @@
    :alt: logo.
    :target: .
 
+.. raw:: html
+
+   <br><br>
+
 OpenConMo: Open-Source Software for Vibration Based Condition Monitoring
 ========================================================================
 

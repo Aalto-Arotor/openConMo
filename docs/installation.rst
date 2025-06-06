@@ -2,3 +2,7 @@
 
 Installation
 ============
+
+Install the latest version from PyPI::
+
+    pip install openconmo
