@@ -27,14 +27,16 @@ def download(url: str, filepath: str, chunk_size=1024):
 # "Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump.7z"
 
 
+# 0-14: eri mittaukset, sama arvo
 def download_nln(cur_dir):
     download_dir = cur_dir / "data" / "NLN-EMP" / "RAW"
+    print(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
     conversion = True  # True if float32 needed (e.g. for deep learning)
 
     if (download_dir / "Dataset").is_dir():
         pass
-    elif (download_dir / "Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump.7z").is_file():
+    elif list(download_dir.glob("*.7z")):
         print("Please extract the .7z file contents to data/NLN-EMP/RAW and rerun.")
 
     else:
@@ -70,8 +72,9 @@ def download_nln(cur_dir):
 
     for idx, chunk in enumerate(file_chunks):
         print(f"Processing chunk {idx+1} of {len(file_chunks)}...")
+        print(idx)
         dfs = []
-
+        i = 0
         for f in chunk:
             print(f)
             p = f.parts
@@ -91,7 +94,6 @@ def download_nln(cur_dir):
             df["class"] = fault
             df["speed"] = speed
             df["channel"] = channel
-            df["fault"] = fault
             df["severity"] = severity
             df["n_poles"] = n_poles
             df["m_type"] = m_type
@@ -106,21 +108,31 @@ def download_nln(cur_dir):
             continue
 
         dfs = pd.concat(dfs)
+        print(dfs)
 
         if conversion:
             float64_cols = list(dfs.select_dtypes(include="float64"))
             dfs[float64_cols] = dfs[float64_cols].astype("float32")
 
-        string_cols = ["speed", "severity", "channel", "time"]
-        dfs[string_cols] = dfs[string_cols].astype("string")
+        string_cols = df.select_dtypes(include="object").columns
+        df[string_cols] = df[string_cols].apply(lambda x: x.str.strip())
         dfs = dfs.reset_index(drop=True)
 
-        save_path = download_dir.parent / f"NLN-EMP_chunk{idx+1}.feather"
-        dfs.to_feather(save_path)
-        print(f"Chunk {idx+1} saved to {save_path}.\n")
+        dfs.to_parquet(
+            Path.cwd() / "data" / "NLN-EMP" / "NLN_EMP_chunk_{}.parquet".format(idx+1),
+            index=False,
+        )
+        print("Chunk saved.")
+        i += 1
 
     print("All chunks processed and saved.")
-    return dfs
+    print("Dataframe shape:", dfs.shape)
+    print("Data types:")
+    print(dfs.dtypes)
+
+    print()
+    print("First 3 rows of the dataframe:")
+    print(dfs.head(3))
 
 
 try:
@@ -130,11 +142,3 @@ except NameError:
     # Fallback for notebooks where __file__ is undefined
     cur_dir = Path(os.getcwd())
 dfs = download_nln(cur_dir)
-
-print("Dataframe shape:", dfs.shape)
-print("Data types:")
-print(dfs.dtypes)
-
-print()
-print("First 3 rows of the dataframe:")
-print(dfs.head(3))

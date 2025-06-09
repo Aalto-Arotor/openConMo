@@ -105,93 +105,96 @@ fault_map = {
 }
 
 # Specify raw data
-files = download_dir.glob("**/*.csv")
-
-# Go through files
-dfs = []
-for f in files:
-    # SPECS
-    ##
-
-    # Get measurement specifications from file path
-    p = f.parts
-
-    if p[-2] == "Healthy":
-        rpm = int(p[-4].replace("RPM", ""))
-        torque = torque_map[p[-3]]
-        installation = 0
-        severity = "-"
-        GP = int(p[-1][2])
-        fault = "healthy"
-    elif p[-3] == "Faulty":
-        rpm = int(p[-5].replace("RPM", ""))
-        torque = torque_map[p[-4]]
-        installation = int(p[-2][-1])
-        severity, fault = fault_map.get(
-            p[-1].replace(".csv", ""), (None, None)
-        )  # Fault types we don't care about not in map
-        GP = 0
-    else:
-        raise ValueError(f"Unknown type directory")
-
-    # Skip unknown faults
-    if fault is None:
-        raise ValueError(f"Unknown fault type: {p[-1]}")
-
-    # SIGNAL
-    ##
-
-    # Read CSV
-    df = pd.read_csv(f, sep=",", index_col=0, header=0)
-
-    print(str(f))
-
-    # Add info from file name
-    df["class"] = fault
-    df["rpm"] = rpm
-    df["torque"] = torque
-    df["installation"] = installation
-    df["severity"] = severity
-    df["healthy_GP"] = GP
-
-    # Fix signal data
-    #################
-
-    # Enc4 runs the wrong way in most files
-    if df["enc4_ang"].iloc[0] > df["enc4_ang"].iloc[1]:
-        df["enc4_ang"] = -df["enc4_ang"]
-
-    # Some measurements have glitches in time
-    df["time"] = fix_time(df["time"].to_numpy())
-
-    # Make DF of one file
-    dfs.append(df)
 
 
-# Combine files
-dfs = pd.concat(dfs)
+def chunks(lst, n):
+    lst = list(lst)
+    k = len(lst) // n
+    for i in range(n):
+        yield lst[i * k: (i + 1) * k] if i < n - 1 else lst[i * k:]
 
-# * Conversion done because deep learning computations are done with float32 anyway
-# Get float 64 columns
-if conversion:
 
-    float64_cols = list(dfs.select_dtypes(include="float64"))
-    # Convert those columns float 32 pitäiskö tehdä?
-    dfs[float64_cols] = dfs[float64_cols].astype("float32")
+files = list(download_dir.glob("**/*.csv"))
+file_chunks = list(chunks(files, 3))
 
-string_cols = [
-    "class",
-    "severity",
-]
-dfs[string_cols] = dfs[string_cols].astype("string")
+for idx, chunk in enumerate(file_chunks):
+    print(f"\nProcessing chunk {idx+1} of {len(file_chunks)}...")
+    dfs = []
 
-# Reset index to counteract concatenating a bunch of separate dataframes
-dfs = dfs.reset_index(drop=True)
+    for f in chunk:
+        print(f"Processing file: {f}")
+        p = f.parts
 
-print("Converssion to feather done.")
-print("Saving to feather...")
+        # Parse measurement metadata from file path
+        if p[-2] == "Healthy":
+            rpm = int(p[-4].replace("RPM", ""))
+            torque = torque_map.get(p[-3], "unknown")
+            installation = 0
+            severity = "-"
+            GP = int(p[-1][2])
+            fault = "healthy"
+        elif p[-3] == "Faulty":
+            print(p[-3])
+            rpm = int(p[-5].replace("RPM", ""))
+            torque = torque_map.get(p[-4], "unknown")
+            installation = int(p[-2][-1])
+            # Fault types we don't care about not in map
+            severity, fault = fault_map.get(
+                p[-1].replace(".csv", ""), (None, None))
+            GP = 0
+        else:
+            print(f"Skipping unknown file structure: {f}")
+            continue
 
-dfs.to_feather(download_dir.parent / "AGFD_downloaded.feather")
+        if fault is None:
+            print(f"Skipping unknown fault type: {p[-1]}")
+            continue
+
+        try:
+            df = pd.read_csv(f, sep=",", index_col=0, header=0)
+        except Exception as e:
+            print(f"Failed to read {f}: {e}")
+            continue
+
+        # Preprocess signals
+        if df["enc4_ang"].iloc[0] > df["enc4_ang"].iloc[1]:
+            df["enc4_ang"] = -df["enc4_ang"]
+
+        df["time"] = fix_time(df["time"].to_numpy())
+
+        # Add labels
+        df["class"] = fault
+        df["rpm"] = rpm
+        df["torque"] = torque
+        df["installation"] = installation
+        df["severity"] = severity
+        df["healthy_GP"] = GP
+
+        # Convert float64 to float32
+        if conversion:
+            float64_cols = list(df.select_dtypes(include="float64"))
+            df[float64_cols] = df[float64_cols].astype("float32")
+
+        dfs.append(df)
+
+    if not dfs:
+        print(f"No valid data found in chunk {idx+1}, skipping.")
+        continue
+
+    # Combine all dataframes for this chunk
+    dfs = pd.concat(dfs, ignore_index=True)
+
+    # Clean up object-type columns
+    string_cols = dfs.select_dtypes(include="object").columns
+    dfs[string_cols] = dfs[string_cols].apply(lambda x: x.str.strip())
+
+    dfs = dfs.reset_index(drop=True)
+
+    # Save to parquet
+    out_path = download_dir.parent / f"AGFD_chunk_{idx+1}.parquet"
+    dfs.to_parquet(out_path, index=False)
+    print(f"Saved chunk {idx+1} to: {out_path}")
+
 
 print("Saving done.")
 print()

@@ -9,12 +9,15 @@ import subprocess
 import scipy.io as io
 import os
 import math
-
+import sys
+import threading
 
 # Iterate over all arguments: TODO Unar support might be required here
 
 # Location where a multitude of .rar files are found:
 # https://groups.uni-paderborn.de/kat/BearingDataCenter/
+
+# Allun download
 
 
 def download(url: str, filepath: str, chunk_size=1024):
@@ -53,7 +56,6 @@ else:
     # Mendeley data download url
     # For manual download, visit: https://groups.uni-paderborn.de/kat/BearingDataCenter/
 
-    # All files
     files = [
         "K001.rar",
         "K002.rar",
@@ -100,9 +102,9 @@ else:
     print()
     print("Download complete.")
     print(
-        # TODO: automated script for this
+        # This needs to be changed, can rar files be extracted with python?
         "Please extract all of the .rar file contents to the data/Paderborn/RAW directory and run the script again."
-    )
+    )  # unar *.rar
 dfs = []
 
 
@@ -121,22 +123,28 @@ for f in files:
             return 'MATLAB 7.3' in header
 
     # Get measurement specifications from file path
-
+    # ('/', 'Users', 'akukarhinen', 'Documents', 'Doctoral_thesis', 'Imurointi_func', 'data', 'Paderborn', 'RAW', 'KI14', 'N15_M07_F10_KI14_11.mat')
     p = f.parts
+    # print(is_v73_mat(f))
 
+    # else:
+    #     raise ValueError(f"Unknown type directory")
     # SIGNAL
     ##
 
     # Read .mat
-
+    # print(f)
     try:
+        # pd.read_csv(f, sep=",", index_col=0, header=0) dict_keys(['__header__', '__version__', '__globals__', 'N15_M07_F10_KI14_11'])
         data = io.loadmat(f)
     except TypeError:
-        print("Not expected structure on: {}, Skipping".format(f))
+        print("This .mat file is weird: {}, Skipping".format(f))
         continue
 
+    # print(str(f))
     data_mes = data[p[-1].replace(".mat", "")]
-
+    # print(type(data_mes))
+    # print(data_mes.shape)
     entry = data_mes[0, 0]
     signal_list = entry['Y'].squeeze()
 
@@ -161,7 +169,7 @@ for f in files:
     # Create DataFrame
     df = pd.DataFrame(df_dict)
 
-    # Try to add time column from X (also padded )
+    # Try to add time column from X (also padded if needed)
     x_signals = entry['X'].squeeze()
     for x_sig in x_signals:
         try:
@@ -175,15 +183,19 @@ for f in files:
                 break
         except Exception:
             continue
-    # Include bearing code and the setting of the file
+    # Data has to be split between the bearing codes
     df["brg_code"] = p[-2]
     df["setting"] = p[-1].replace(".mat", "")
     dfs.append(df)
+    # Final DataFrame is ready
+    # print(df.head())
 
+# dfs listassa kaikki järkevässä muodossa
+# Combine files <--- Toimii!
 print("Starting to concatenate...")
 
 
-def save_dfs_to_three_feathers(dataframes):
+def save_dfs_to_parquet(dataframes):
     n = len(dfs)
     split_size = math.ceil(n / 4)
 
@@ -191,9 +203,19 @@ def save_dfs_to_three_feathers(dataframes):
         chunk = dfs[i * split_size: (i + 1) * split_size]
         print(f"Processing chunk {i+1}/4 with {len(chunk)} DataFrames...")
         df = pd.concat(chunk, ignore_index=True)
+        print(df["setting"].unique())
+        print(Path.cwd())
+        df.to_parquet(
+            Path.cwd() / "data" / "Paderborn" / "Paderborn_chunk_{}.parquet".format(i+1),
+            # partition_cols=["brg_code", "setting"], # Causes some problems, split them to 4 for simplicity
+            index=False,
+            # compression="brotli",
+            # engine="fastparquet", # OPTIONAL DEPENDENCY
+        )
+        print("Chunk saved.")
 
-        df.reset_index(drop=True).to_feather(
-            download_dir.parent / f"Paderborn_chunk{i+1}.feather")
+        # df.reset_index(drop=True).to_feather(
+        #     download_dir.parent / f"Paderborn_chunk{i+1}.feather")
 
     print("Saving done.")
     print()
@@ -205,6 +227,8 @@ def save_dfs_to_three_feathers(dataframes):
     print()
     print("First 3 rows of the dataframe:")
     print(df.head(3))
+   # print("Active threads:", threading.enumerate())
+   # sys.exit(0)
 
 
-save_dfs_to_three_feathers(dfs)
+save_dfs_to_parquet(dfs)

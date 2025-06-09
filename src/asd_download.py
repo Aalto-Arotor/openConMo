@@ -139,10 +139,13 @@ dfs[string_cols] = dfs[string_cols].astype("string")
 # Reset index to counteract concatenating a bunch of separate dataframes
 dfs = dfs.reset_index(drop=True)
 
-print("Converssion to feather done.")
-print("Saving to feather...")
+print("Converssion to parquet done.")
+print("Saving to parquet...")
 
-dfs.to_feather(download_dir.parent / "ASD_downloaded.feather")
+dfs.to_parquet(
+    download_dir.parent / "ASD_downloaded.parquet",
+    index=False,
+)
 
 print("Saving done.")
 print()

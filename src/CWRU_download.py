@@ -2,6 +2,7 @@ from urllib.request import urlretrieve
 
 # import os
 import scipy
+from scipy.io import loadmat
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -115,7 +116,8 @@ files = [
     (176, "48k_DE_IR_014_2.mat", [], [], []),
     (177, "48k_DE_IR_014_3.mat", [], [], []),
     # IR 021
-    (213, "48k_DE_IR_021_0.mat", ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
+    (213, "48k_DE_IR_021_0.mat", [
+     "identical_DE_and_FE"], ["identical_DE_and_FE"], []),
     (214, "48k_DE_IR_021_1.mat", ["clipped"], [], []),
     (215, "48k_DE_IR_021_2.mat", ["clipped"], [], []),
     (217, "48k_DE_IR_021_3.mat", [], [], []),
@@ -125,12 +127,14 @@ files = [
     (124, "48k_DE_B_007_2.mat", [], [], []),
     (125, "48k_DE_B_007_3.mat", [], [], []),
     # B 014
-    (189, "48k_DE_B_014_0.mat", ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
+    (189, "48k_DE_B_014_0.mat", [
+     "identical_DE_and_FE"], ["identical_DE_and_FE"], []),
     (190, "48k_DE_B_014_1.mat", [], [], []),
     (191, "48k_DE_B_014_2.mat", ["clipped"], [], []),
     (192, "48k_DE_B_014_3.mat", [], [], []),
     # B 021
-    (226, "48k_DE_B_021_0.mat", ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
+    (226, "48k_DE_B_021_0.mat", [
+     "identical_DE_and_FE"], ["identical_DE_and_FE"], []),
     (227, "48k_DE_B_021_1.mat", [], [], []),
     (228, "48k_DE_B_021_2.mat", ["clipped"], [], []),
     (229, "48k_DE_B_021_3.mat", ["clipped"], [], []),
@@ -150,12 +154,14 @@ files = [
     (163, "48k_DE_OR-OP_007_2.mat", [], [], []),
     (164, "48k_DE_OR-OP_007_3.mat", [], [], []),
     # OR 014 centered
-    (201, "48k_DE_OR-C_014_0.mat", ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
+    (201, "48k_DE_OR-C_014_0.mat",
+     ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
     (202, "48k_DE_OR-C_014_1.mat", [], [], []),
     (203, "48k_DE_OR-C_014_2.mat", [], [], []),
     (204, "48k_DE_OR-C_014_3.mat", [], [], []),
     # OR 021 centered
-    (238, "48k_DE_OR-C_021_0.mat", ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
+    (238, "48k_DE_OR-C_021_0.mat",
+     ["identical_DE_and_FE"], ["identical_DE_and_FE"], []),
     (239, "48k_DE_OR-C_021_1.mat", [], [], []),
     (240, "48k_DE_OR-C_021_2.mat", ["clipped"], [], []),
     (241, "48k_DE_OR-C_021_3.mat", ["clipped"], [], []),
@@ -189,7 +195,8 @@ files = [
     (273, "12k_FE_IR_021_3.mat", [], [], []),
     # B 007
     (282, "12k_FE_B_007_0.mat", [], [], []),
-    (283, "12k_FE_B_007_1.mat", ["electric_noise"], ["electric_noise"], ["electric_noise"]),
+    (283, "12k_FE_B_007_1.mat", ["electric_noise"], [
+     "electric_noise"], ["electric_noise"]),
     (284, "12k_FE_B_007_2.mat", [], [], []),
     (285, "12k_FE_B_007_3.mat", [], [], []),
     # B 014
@@ -220,14 +227,17 @@ files = [
     # OR 014 centered
     (313, "12k_FE_OR-C_014_0.mat", [], [], []),
     # OR 014 orthogonal
-    (310, "12k_FE_OR-OR_014_0.mat", [], [], []),  # ! These were flipped on the website
-    (309, "12k_FE_OR-OR_014_1.mat", [], [], []),  # ! These were flipped on the website
+    # ! These were flipped on the website
+    (310, "12k_FE_OR-OR_014_0.mat", [], [], []),
+    # ! These were flipped on the website
+    (309, "12k_FE_OR-OR_014_1.mat", [], [], []),
     (311, "12k_FE_OR-OR_014_2.mat", [], [], []),
     (312, "12k_FE_OR-OR_014_3.mat", [], [], []),
     # OR 021 centered
     (315, "12k_FE_OR-C_021_0.mat", [], [], []),
     # OR 021 orthogonal
-    (316, "12k_FE_OR-OR_021_1.mat", [], [], []),  # ! Notice this starts from 1 HP, 0 HP missing from website
+    # ! Notice this starts from 1 HP, 0 HP missing from website
+    (316, "12k_FE_OR-OR_021_1.mat", [], [], []),
     (317, "12k_FE_OR-OR_021_2.mat", [], [], []),
     (318, "12k_FE_OR-OR_021_3.mat", [], [], []),
 ]
@@ -299,14 +309,12 @@ print()
 
 dfs = []
 
-for path_object in download_dir.rglob("*"):
-    # Shouldn't be, but skip if is
-    if not path_object.is_file() or path_object.suffix != ".mat":
+for path_object in download_dir.rglob("*.mat"):
+    if not path_object.is_file():
         continue
 
     measurement_specs = path_object.stem.split("_")
 
-    # Healthy measurement specs handled separately
     if "normal" in path_object.stem:
         sampling_rate = 48
         fault_location = "-"
@@ -314,67 +322,47 @@ for path_object in download_dir.rglob("*"):
         fault_orientation = "-"
         fault_depth = 0
         torque = int(measurement_specs[1])
-    # Specs for the rest of the files
     else:
         sampling_rate = int(measurement_specs[0][:2])
         fault_location = measurement_specs[1]
         fault_type = measurement_specs[2].split("-")[0]
-        fault_orientation = measurement_specs[2].split("-")[1] if fault_type == "OR" else "-"
+        fault_orientation = measurement_specs[2].split(
+            "-")[1] if fault_type == "OR" else "-"
         fault_depth = int(measurement_specs[3])
         torque = int(measurement_specs[4])
 
-    # Load data, and get the different sensor (DE/FE/BA) measurements
-    print(path_object.name)
-    data = scipy.io.loadmat(path_object)
-    DE_key = list(filter(lambda x: "DE" in x, data.keys()))[0]
-    key_tmp = list(filter(lambda x: "FE" in x, data.keys()))
-    FE_key = key_tmp[0] if len(key_tmp) > 0 else None
-    key_tmp = list(filter(lambda x: "BA" in x, data.keys()))
-    BA_key = key_tmp[0] if len(key_tmp) > 0 else None
+    data = loadmat(path_object)
+    DE_key = next((k for k in data if "DE" in k), None)
+    FE_key = next((k for k in data if "FE" in k), None)
+    BA_key = next((k for k in data if "BA" in k), None)
 
-    measurements = [data[DE_key]]
-    measurements.append(data[FE_key] if FE_key is not None else np.array([]))
-    measurements.append(data[BA_key] if BA_key is not None else np.array([]))
+    sensor_keys = [("DE", DE_key), ("FE", FE_key), ("BA", BA_key)]
 
-    # Process data
-    for i, measurement in enumerate(measurements):
-        measurement = measurement.reshape(-1)
+    for sensor_label, key in sensor_keys:
+        if key is None or key not in data:
+            continue
 
-        tags = list(filter(lambda x: x[1] == path_object.name, files))[0][2:5]
+        signal = data[key].reshape(-1)
+        measurement_id = f"{path_object.stem}_{sensor_label}"
 
-        # No need for float64
-        # measurement = measurement.astype("float32")
-
-        tmp_df = pd.DataFrame(
-            data=[
-                [
-                    ["DE", "FE", "BA"][i],
-                    fault_location,
-                    fault_type,
-                    fault_depth,
-                    fault_orientation,
-                    sampling_rate,
-                    torque,
-                    tags[i],
-                    measurement,
-                ]
-            ],
-            columns=[
-                "measurement location",
-                "fault location",
-                "fault type",
-                "fault depth",
-                "fault orientation",
-                "sampling rate",
-                "torque",
-                "tags",
-                "measurement",
-            ],
-        )
+        tmp_df = pd.DataFrame({
+            "measurement_id": measurement_id,
+            "sample_index": np.arange(len(signal)),
+            "measurement": signal,
+            "measurement location": sensor_label,
+            "fault location": fault_location,
+            "fault type": fault_type,
+            "fault depth": fault_depth,
+            "fault orientation": fault_orientation,
+            "sampling rate": sampling_rate,
+            "torque": torque,
+        })
         dfs.append(tmp_df)
 
-dfs = pd.concat(dfs)
+# Combine all rows
+dfs = pd.concat(dfs, ignore_index=True)
 
+# Convert to string types
 string_cols = [
     "measurement location",
     "fault location",
@@ -383,9 +371,11 @@ string_cols = [
 ]
 dfs[string_cols] = dfs[string_cols].astype("string")
 
-dfs = dfs.reset_index(drop=True)
-
-dfs.to_feather(download_dir.parent / "CWRU_downloaded.feather")
+# Save exploded format
+dfs.to_parquet(
+    Path.cwd() / "data" / "CWRU" / "CWRU_downloaded.parquet",
+    index=False,
+)
 
 print()
 print("DTYPES")
