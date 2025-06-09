@@ -22,7 +22,7 @@ def download(url: str, filepath: str, chunk_size=1024):
 # FILE CHECK / DOWNLOAD
 #######################
 
-# cur_dir = Path(__file__).parent.parent # IF from .py file
+
 try:
     # Works in .py script
     cur_dir = Path(__file__).resolve().parent

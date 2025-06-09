@@ -12,10 +12,6 @@ import math
 import sys
 import threading
 
-# Iterate over all arguments: TODO Unar support might be required here
-
-# Location where a multitude of .rar files are found:
-# https://groups.uni-paderborn.de/kat/BearingDataCenter/
 
 # Allun download
 
@@ -102,49 +98,35 @@ else:
     print()
     print("Download complete.")
     print(
-        # This needs to be changed, can rar files be extracted with python?
+
         "Please extract all of the .rar file contents to the data/Paderborn/RAW directory and run the script again."
-    )  # unar *.rar
+    )
 dfs = []
 
 
-# Specify raw data
 files = download_dir.glob("**/*.mat")
 
-# Go through files
+
 dfs = []
 for f in files:
     # SPECS
-    ##
     def is_v73_mat(filepath):
         """Check if the .mat file is v7.3 (HDF5) format"""
         with open(filepath, 'rb') as f:
             header = f.read(128).decode(errors='ignore')
             return 'MATLAB 7.3' in header
 
-    # Get measurement specifications from file path
-    # ('/', 'Users', 'akukarhinen', 'Documents', 'Doctoral_thesis', 'Imurointi_func', 'data', 'Paderborn', 'RAW', 'KI14', 'N15_M07_F10_KI14_11.mat')
     p = f.parts
-    # print(is_v73_mat(f))
 
-    # else:
-    #     raise ValueError(f"Unknown type directory")
-    # SIGNAL
-    ##
-
-    # Read .mat
-    # print(f)
     try:
-        # pd.read_csv(f, sep=",", index_col=0, header=0) dict_keys(['__header__', '__version__', '__globals__', 'N15_M07_F10_KI14_11'])
+
         data = io.loadmat(f)
     except TypeError:
         print("This .mat file is weird: {}, Skipping".format(f))
         continue
 
-    # print(str(f))
     data_mes = data[p[-1].replace(".mat", "")]
-    # print(type(data_mes))
-    # print(data_mes.shape)
+
     entry = data_mes[0, 0]
     signal_list = entry['Y'].squeeze()
 
@@ -188,10 +170,7 @@ for f in files:
     df["setting"] = p[-1].replace(".mat", "")
     dfs.append(df)
     # Final DataFrame is ready
-    # print(df.head())
 
-# dfs listassa kaikki järkevässä muodossa
-# Combine files <--- Toimii!
 print("Starting to concatenate...")
 
 
@@ -207,15 +186,10 @@ def save_dfs_to_parquet(dataframes):
         print(Path.cwd())
         df.to_parquet(
             Path.cwd() / "data" / "Paderborn" / "Paderborn_chunk_{}.parquet".format(i+1),
-            # partition_cols=["brg_code", "setting"], # Causes some problems, split them to 4 for simplicity
             index=False,
-            # compression="brotli",
-            # engine="fastparquet", # OPTIONAL DEPENDENCY
+
         )
         print("Chunk saved.")
-
-        # df.reset_index(drop=True).to_feather(
-        #     download_dir.parent / f"Paderborn_chunk{i+1}.feather")
 
     print("Saving done.")
     print()
@@ -227,8 +201,6 @@ def save_dfs_to_parquet(dataframes):
     print()
     print("First 3 rows of the dataframe:")
     print(df.head(3))
-   # print("Active threads:", threading.enumerate())
-   # sys.exit(0)
 
 
 save_dfs_to_parquet(dfs)

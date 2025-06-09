@@ -118,11 +118,10 @@ for f in files:
     dfs.append(df)
     # print(len(dfs))
 
-# dfs listassa kaikki järkevässä muodossa
-# Combine files <--- Toimii!
+
 dfs = pd.concat(dfs)
 
-# * Conversion done because deep learning computations are done with float32 anyway <--- kaikki ei tee välttämättä DL
+# * Conversion done because deep learning computations are done with float32 anyway
 # Get float 64 columns
 if conversion:
 

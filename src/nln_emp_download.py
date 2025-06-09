@@ -22,12 +22,7 @@ def download(url: str, filepath: str, chunk_size=1024):
 # FILE CHECK / DOWNLOAD
 #######################
 
-# cur_dir = Path(__file__).parent.parent # IF from .py file
-                # DATA
-# "Current and Vibration Monitoring Dataset for various Faults in an E-motor-driven Centrifugal Pump.7z"
 
-
-# 0-14: eri mittaukset, sama arvo
 def download_nln(cur_dir):
     download_dir = cur_dir / "data" / "NLN-EMP" / "RAW"
     print(download_dir)
