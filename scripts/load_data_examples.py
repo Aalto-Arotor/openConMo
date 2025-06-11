@@ -1,4 +1,4 @@
-import examples.scripts.data_utils as du
+import scripts.data_utils as du
 
 ########
 # CWRU #

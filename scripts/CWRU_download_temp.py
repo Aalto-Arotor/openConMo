@@ -294,7 +294,7 @@ except NameError:
     cur_dir = Path().absolute()
 
 # Base folder to store all data
-download_base = cur_dir.parent / "data" / "CWRU-dataset"
+download_base = cur_dir.parent / "examples" / "data" / "CWRU-dataset"
 download_base.mkdir(parents=True, exist_ok=True)
 
 failed_downloads = []
