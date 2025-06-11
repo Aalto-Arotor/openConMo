@@ -59,5 +59,5 @@ See [openconmo documentation](https://aalto-arotor.github.io/openConMo/) for doc
 * PyArrow (for loading datasets)
 
 ## Authors
-This software is authored and maintained by Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen and Elmo Laine, Mechatronics research group, Aalto University.
+This software is authored and maintained by Sampo Laine, Sampo Haikonen, Aleksanteri Hämäläinen, Elmo Laine and Aku Karhinen, Mechatronics research group, Aalto University.
 Please email questions to arotor.software@aalto.fi
