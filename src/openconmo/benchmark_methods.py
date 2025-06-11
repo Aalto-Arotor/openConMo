@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import scipy.fft
 from tqdm import tqdm
 from scipy.fft import fft, ifft
-from openconmo.kurtogram import fast_kurtogram
-import openconmo.utils as ut
+from kurtogram import fast_kurtogram
+import utils as ut
 
 
 def envelope(signal, fs):
@@ -165,10 +165,6 @@ def DRS(signal, N, Delta):
         deterministic_part[i] = signal[i-N-Delta:i-Delta] @ h_n
         random_part[i] = signal[i] - deterministic_part[i]
 
-    # Zero-padding the undefined initial region
-    deterministic_part[:N+Delta] = 0
-    random_part[:N+Delta] = 0
-
     return random_part, deterministic_part
 
 def benchmark_method(signal, fs, N=16384, Delta=500, nlevel=2):
@@ -227,3 +223,6 @@ def benchmark_method(signal, fs, N=16384, Delta=500, nlevel=2):
 
 
     return t, filtered_signal, f, X
+
+if __name__ == "__main__":
+    print("This module contains benchmark methods for fault detection in vibration signals.")
