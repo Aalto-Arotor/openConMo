@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import examples.scripts.data_utils as du
+import scripts.data_utils as du
 
 def save_cwru_to_parquet(case_num, fs, randall_diagnoses, fault):
     mat_files = glob.glob(f"CWRU-dataset/**/*{case_num}*.mat", recursive=True)

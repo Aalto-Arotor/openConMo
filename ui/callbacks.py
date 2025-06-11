@@ -1,6 +1,6 @@
 from openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
-from openconmo.ui.figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
-from openconmo.ui.utils import read_from_parquet
+from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
+from utils import read_from_parquet
 
 from dash.dependencies import Input, Output
 from dash import html

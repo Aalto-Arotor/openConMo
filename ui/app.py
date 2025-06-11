@@ -1,8 +1,8 @@
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
-from openconmo.ui.layouts import create_left_panel
-from openconmo.ui.callbacks import register_callbacks
+from layouts import create_left_panel
+from callbacks import register_callbacks
 
 # Initialize the Dash app
 app = dash.Dash(__name__)

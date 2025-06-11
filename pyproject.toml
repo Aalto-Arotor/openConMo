@@ -37,7 +37,6 @@ dependencies = [
 Homepage = "https://github.com/Aalto-Arotor/openConMo"
 
 [project.scripts]
-openconmo-ui = "openconmo.ui.app:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
