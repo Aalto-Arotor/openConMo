@@ -177,3 +177,4 @@ venv
 .DS_Store
 *.parquet
 **/DRS_examples.ipynb
+src/data/
