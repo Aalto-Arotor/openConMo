@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import scipy.fft
 from tqdm import tqdm
 from scipy.fft import fft, ifft
-from kurtogram import fast_kurtogram
-import utils as ut
+from openconmo.kurtogram import fast_kurtogram
+import openconmo.utils as ut
 
 
 def envelope(signal, fs):

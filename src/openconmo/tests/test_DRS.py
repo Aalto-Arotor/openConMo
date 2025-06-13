@@ -1,18 +1,16 @@
-import sys
-sys.path.append("../src/openconmo/")
-
 import unittest
+
+import sys
+sys.path.append("../../")
 
 import numpy as np
 
-from benchmark_methods import DRS
+from openconmo.benchmark_methods import DRS
 
 class TestDRS(unittest.TestCase):
     def test_drs_basic(self):
         def rmse(a, b):
             return np.sqrt(np.mean((a - b) ** 2))
-        
-        # Create a signal: sum of a sine wave (deterministic) and white noise (random)
         np.random.seed(0)
         N = 8192
         Delta = 500
