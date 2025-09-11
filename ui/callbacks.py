@@ -1,5 +1,9 @@
-from openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
-from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot
+# import sys
+# import os
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# from src.openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
+from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot, squared_envelope_plot, cepstrum_prewhitening_plot, benchmark_plot
 from utils import read_from_parquet
 
 from dash.dependencies import Input, Output
@@ -11,7 +15,7 @@ def register_callbacks(app):
     '''Register all Dash app callbacks for plot updates and metadata display.'''
     @app.callback(
         [Output('time-plot', 'figure'),
-         Output('frequency-plot', 'figure'),
+         # Output('frequency-plot', 'figure'),
          Output('envelope-plot', 'figure')],
          
         [Input('upload-data', 'contents'),
@@ -35,7 +39,7 @@ def register_callbacks(app):
 
         if contents is None:
             dummy_fig = create_dummy_figure("Upload a file")
-            return dummy_fig, dummy_fig, dummy_fig
+            return dummy_fig, dummy_fig
         
         try:
             signal, fs, name, measurement_location, unit, meas_id, fault, fault_frequencies, rotating_freq_hz = read_from_parquet(contents)
@@ -49,24 +53,16 @@ def register_callbacks(app):
             
             # Create plots
             title_upper = f"Time Domain - {name} - {measurement_location} (ID: {meas_id})"
-            title_lower = f"Frequency Domain - {name} - {measurement_location} (ID: {meas_id})"
             title_envelope = f"Envelope Spectrum - {name} - {measurement_location} (ID: {meas_id})"
             
             upper_plot = create_time_series_plot(signal_slice, fs, title=title_upper, unit=unit)
-            lower_plot = create_frequency_domain_plot(signal_slice, fs, title=title_lower, unit=unit)
             
             if dropdown_value == "1":
-                print("Method 1\n")
+                envelope_plot = squared_envelope_plot(signal_slice, fs, title=title_envelope, unit=unit)
             elif dropdown_value == "2":
-                print("Method 2\n")
+                envelope_plot = cepstrum_prewhitening_plot(signal_slice, fs)
             elif dropdown_value == "3":
-                print("Method 3\n")
-            
-            
-
-            
-            envelope_plot = create_envelope_spectrum_plot(signal_slice, fs, title=title_envelope, unit=unit)
-            
+                envelope_plot = benchmark_plot(signal_slice, fs)
             
             def add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz):
                 '''Overlay harmonic and optional sideband lines on a frequency-domain plot.'''
@@ -75,37 +71,58 @@ def register_callbacks(app):
 
                 for i in range(1, n_harmonics + 1):
                     harmonic_freq = ff_hz * i * rotating_freq_hz
+                    ymax = max(plot['data'][0]['y'])
                     
-                    # Add harmonic line
+                    # Only set name and showlegend for the first harmonic
+                    if i == 1:
+                        name = f'Harmonics of expected FF'
+                        showlegend = True
+                    else:
+                        name = ''
+                        showlegend = False
+
                     plot['data'].append({
                         'x': [harmonic_freq, harmonic_freq],
-                        'y': [0, 1],
+                        'y': [0, ymax],
                         'type': 'scatter',
                         'mode': 'lines',
                         'line': {'color': 'red', 'dash': 'dash', 'width': 1},
-                        'name': f'{i}x {ff_hz} Hz',
+                        'name': name,
                         'yaxis': 'y',
                         'hoverinfo': 'name',
-                        'showlegend': True
+                        'showlegend': showlegend
                     })
-                    
+
                     if f_sb_hz and f_sb_hz > 0:
                         add_sideband_lines(plot, harmonic_freq, f_sb_hz)
-
+                        
             def add_sideband_lines(plot, harmonic_freq, f_sb_hz):
-                '''Add sideband lines around a given harmonic frequency on the plot.'''
-                for offset, label in [(-f_sb_hz, 'SB-'), (f_sb_hz, 'SB+')]:
+                """Add sideband lines around a given harmonic frequency on the plot."""
+                ymax = max(plot['data'][0]['y'])
+
+                # Have we already added a visible legend entry for sidebands?
+                sideband_legend_already = any(
+                    (t.get('name') == '1st-order sidebands at ± SB') and t.get('showlegend')
+                    for t in plot.get('data', [])
+                )
+
+                for idx, offset in enumerate([-f_sb_hz, f_sb_hz]):
                     freq = harmonic_freq + offset
+
+                    # Only the very first sideband pair across ALL harmonics gets a legend
+                    showlegend = (not sideband_legend_already) and (idx == 0)
+                    name = '1st-order sidebands at ± SB' if showlegend else None
+
                     plot['data'].append({
                         'x': [freq, freq],
-                        'y': [0, 1],
+                        'y': [0, ymax],
                         'type': 'scatter',
                         'mode': 'lines',
-                        'line': {'color': 'green', 'dash': 'dot', 'width': 1},
-                        'name': f'{label} {freq:.1f} Hz',
+                        'line': {'color': 'red', 'dash': 'dot', 'width': 1},
+                        'name': name,
                         'yaxis': 'y',
                         'hoverinfo': 'name',
-                        'showlegend': True
+                        'showlegend': showlegend
                     })
 
             def update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale):
@@ -123,22 +140,29 @@ def register_callbacks(app):
                         plot['layout']['yaxis']['range'] = [y_lim_1, y_lim_2]
 
             # Update scales and add harmonic lines for frequency plots
-            for plot in [lower_plot, envelope_plot]:
+            for plot in [envelope_plot]:
                 plot['layout']['xaxis']['type'] = freq_scale
                 plot['layout']['yaxis']['type'] = amp_scale
                 
                 add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz)
                 update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale)
                 
-                if ff_hz and n_harmonics and ff_hz > 0:
-                    plot['layout']['showlegend'] = True
+            if ff_hz and n_harmonics and ff_hz > 0:
+                plot['layout']['showlegend'] = True
+                plot['layout']['legend'] = {
+                    'orientation': 'h',
+                    'yanchor': 'top',
+                    'y': -0.5,      # Negative value puts it below the plot
+                    'xanchor': 'center',
+                    'x': 0.5
+                }
 
-            return upper_plot, lower_plot, envelope_plot
+            return upper_plot, envelope_plot
             
         except Exception as e:
             print(f"Error reading file: {str(e)}")
             error_fig = create_dummy_figure(f"Error reading file: {str(e)}")
-            return error_fig, error_fig, error_fig
+            return error_fig, error_fig
 
     @app.callback(
         Output('metadata-display', 'children'),

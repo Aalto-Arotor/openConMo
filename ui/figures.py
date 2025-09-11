@@ -1,3 +1,10 @@
+# import sys
+# import os
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# from src.openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
+
+from openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
 import numpy as np
 import plotly.graph_objects as go
 from scipy.signal import hilbert
@@ -228,5 +235,132 @@ def create_envelope_spectrum_plot(signal, fs, title="Envelope Spectrum", unit=""
             'hovermode': 'x unified'
         }
     }
+    return fig
+
+def squared_envelope_plot(signal, fs, title="Squared Envelope Spectrum", unit=""):
+    f,X = envelope(signal, fs)
+    fig = {
+        'data': [{
+            'x': f,
+            'y': X,
+            'type': 'scatter',
+            'mode': 'lines',
+            'name': 'Envelope Spectrum',
+            'line': {'color': '#1f77b4'},  # Different color from regular spectrum
+            'hovertemplate': 'Frequency: %{x:.2f} Hz<br>Magnitude: %{y:.2e} ' + unit + '<extra></extra>',
+            'showlegend': False
+        }],
+        'layout': {
+            'title': title,
+            'xaxis': {
+                'title': {
+                    'text': 'Frequency (Hz)',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': False,
+                'gridcolor': 'lightgray'
+            },
+            'yaxis': {
+                'title': {
+                    'text': f'Envelope Magnitude ({unit})',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': True,
+                'gridcolor': 'lightgray'
+            },
+            'plot_bgcolor': 'white',
+            'paper_bgcolor': 'white',
+            'margin': {'l': 60, 'r': 30, 't': 50, 'b': 50},
+            'hovermode': 'x unified'
+    }}
+    return fig
     
+def cepstrum_prewhitening_plot(signal, fs, title="Squared Envelope Spectrum", unit=""):
+    _, time_signal = cepstrum_prewhitening(signal, fs)
+    s_mid = time_signal[2000:-2000]
+    f,X = envelope(s_mid, fs)
+    fig = {
+        'data': [{
+            'x': f,
+            'y': X,
+            'type': 'scatter',
+            'mode': 'lines',
+            'name': 'Envelope Spectrum',
+            'line': {'color': '#1f77b4'},  # Different color from regular spectrum
+            'hovertemplate': 'Frequency: %{x:.2f} Hz<br>Magnitude: %{y:.2e} ' + unit + '<extra></extra>',
+            'showlegend': False
+        }],
+        'layout': {
+            'title': title,
+            'xaxis': {
+                'title': {
+                    'text': 'Frequency (Hz)',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': True,
+                'gridcolor': 'lightgray'
+            },
+            'yaxis': {
+                'title': {
+                    'text': f'Envelope Magnitude ({unit})',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': True,
+                'gridcolor': 'lightgray'
+            },
+            'plot_bgcolor': 'white',
+            'paper_bgcolor': 'white',
+            'margin': {'l': 60, 'r': 30, 't': 50, 'b': 50},
+            'hovermode': 'x unified'
+    }}
+    return fig
+
+def benchmark_plot(signal, fs, title="Squared Envelope Spectrum", unit=""):
+    t, s, f, X = benchmark_method(signal, fs, N=8192, Delta=500)
+    fig = {
+        'data': [{
+            'x': f,
+            'y': X,
+            'type': 'scatter',
+            'mode': 'lines',
+            'name': 'Envelope Spectrum',
+            'line': {'color': '#1f77b4'},  # Different color from regular spectrum
+            'hovertemplate': 'Frequency: %{x:.2f} Hz<br>Magnitude: %{y:.2e} ' + unit + '<extra></extra>',
+            'showlegend': False
+        }],
+        'layout': {
+            'title': title,
+            'xaxis': {
+                'title': {
+                    'text': 'Frequency (Hz)',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': True,
+                'gridcolor': 'lightgray'
+            },
+            'yaxis': {
+                'title': {
+                    'text': f'Envelope Magnitude ({unit})',
+                    'font': {'size': 14, 'family': 'Arial, sans-serif'},
+                    'standoff': 10
+                },
+                'type': 'log',
+                'showgrid': True,
+                'gridcolor': 'lightgray'
+            },
+            'plot_bgcolor': 'white',
+            'paper_bgcolor': 'white',
+            'margin': {'l': 60, 'r': 30, 't': 50, 'b': 50},
+            'hovermode': 'x unified'
+    }}
     return fig

@@ -51,9 +51,9 @@ def create_left_panel():
                 dmc.Select(
                     id='dummy-dropdown-1',
                     data=[
-                        {'label': 'Method 1 (envelope)', 'value': '1'},
-                        {'label': 'Method 2', 'value': '2'},
-                        {'label': 'Method 3', 'value': '3'}
+                        {'label': 'Envelope', 'value': '1'},
+                        {'label': 'Cepstrum prewhitening', 'value': '2'},
+                        {'label': 'Benchmark', 'value': '3'}
                     ],
                     value='1',
                 ),
@@ -92,7 +92,7 @@ def create_left_panel():
                     ),
                     dmc.NumberInput(
                         id='x_lim_2',
-                        value=0,
+                        value=500,
                         step=100,
                         precision=0,
                         label="x max",
@@ -128,7 +128,7 @@ def create_left_panel():
                     ),
                     dmc.NumberInput(
                         id='n_harmonics',
-                        value=5,
+                        value=3,
                         step=1,
                         precision=0,
                         label="N harmonics",
