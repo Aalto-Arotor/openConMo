@@ -1,6 +1,75 @@
 from dash import html, dcc
 import dash_mantine_components as dmc
 
+def create_bearing_fault_panel():
+    """Top panel for bearing fault frequency calculation."""
+    return dmc.Paper(
+        [
+            dmc.Title("Bearing Fault Frequency Calculator", order=3),
+
+            dmc.Stack(
+                [
+                    dmc.NumberInput(
+                        id="bearing-speed-rpm",
+                        label="Shaft speed (RPM)",
+                        value=0,
+                        min=0,
+                        step=10,
+                        style={"width": "260px"},
+                    ),
+                    dmc.NumberInput(
+                        id="bearing-n-rollers",
+                        label="Number of rolling elements (N)",
+                        value=0,
+                        min=1,
+                        step=1,
+                        precision=0,
+                        style={"width": "260px"},
+                    ),
+                    dmc.NumberInput(
+                        id="bearing-ball-d-mm",
+                        label="Rolling element diameter d (mm)",
+                        value=0,
+                        min=0,
+                        step=0.1,
+                        precision=3,
+                        style={"width": "260px"},
+                    ),
+                    dmc.NumberInput(
+                        id="bearing-pitch-d-mm",
+                        label="Pitch diameter D (mm)",
+                        value=0,
+                        min=0,
+                        step=0.1,
+                        precision=3,
+                        style={"width": "260px"},
+                    ),
+                    dmc.NumberInput(
+                        id="bearing-contact-angle-deg",
+                        label="Contact angle θ (deg)",
+                        value=0.0,
+                        step=0.1,
+                        precision=3,
+                        style={"width": "260px"},
+                    ),
+                    dmc.Button("Calculate", id="bearing-calc-btn", n_clicks=0, style={"width": "260px"}),
+                ],
+                spacing="sm",
+                align="stretch",
+            ),
+
+            dmc.Divider(my="sm"),
+            dmc.Paper(
+                id="bearing-fault-results",
+                p="sm",
+                withBorder=True,
+                children=dmc.Text("No calculation yet.", c="dimmed"),
+            ),
+        ],
+        p="md",
+        withBorder=True,
+        radius="md",
+    )
 def create_left_panel():
     """Create the left panel with controls and metadata display"""
     return dmc.Group([

@@ -6,7 +6,7 @@
 from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot, squared_envelope_plot, cepstrum_prewhitening_plot, benchmark_plot
 from utils import read_from_parquet
 
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash import html
 import dash_mantine_components as dmc
 import numpy as np
@@ -32,6 +32,7 @@ def register_callbacks(app):
          Input('freq-scale', 'value'),
          Input('amp-scale', 'value')]
     )
+
     def update_plots(contents, dropdown_value, time_start, time_stop, 
                     x_lim_1, x_lim_2, y_lim_1, y_lim_2,
                     ff_hz, n_harmonics, f_sb_hz, freq_scale, amp_scale):
@@ -163,6 +164,46 @@ def register_callbacks(app):
             print(f"Error reading file: {str(e)}")
             error_fig = create_dummy_figure(f"Error reading file: {str(e)}")
             return error_fig, error_fig
+
+    @app.callback(
+    Output("bearing-fault-results", "children"),
+    Input("bearing-calc-btn", "n_clicks"),
+    State("bearing-speed-rpm", "value"),
+    State("bearing-n-rollers", "value"),
+    State("bearing-ball-d-mm", "value"),
+    State("bearing-pitch-d-mm", "value"),
+    State("bearing-contact-angle-deg", "value"),
+    prevent_initial_call=True,
+    )
+    def calculate_bearing_faults(n_clicks, rpm, n, d_mm, D_mm, theta_deg):
+        vals = [rpm, n, d_mm, D_mm, theta_deg]
+        if any(v is None for v in vals):
+            return dmc.Alert("Please fill in all parameters.", color="yellow")
+
+        if rpm <= 0 or n <= 0 or d_mm <= 0 or D_mm <= 0:
+            return dmc.Alert("RPM, N, d and D must be > 0.", color="red")
+
+        if d_mm >= D_mm:
+            return dmc.Alert("Pitch diameter D must be greater than rolling element diameter d.", color="red")
+
+        fr = rpm / 60.0
+        ratio = (d_mm / D_mm) * np.cos(np.radians(theta_deg))
+
+        ftf = 0.5 * fr * (1 - ratio)
+        bpfo = 0.5 * n * fr * (1 - ratio)
+        bpfi = 0.5 * n * fr * (1 + ratio)
+        bsf = (D_mm / (2 * d_mm)) * fr * (1 - ratio**2)
+
+        return dmc.SimpleGrid(
+            cols=4,
+            spacing="sm",
+            children=[
+                dmc.Paper([dmc.Text("FTF", fw=700), dmc.Text(f"{ftf:.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BPFO", fw=700), dmc.Text(f"{bpfo:.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BPFI", fw=700), dmc.Text(f"{bpfi:.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BSF", fw=700), dmc.Text(f"{bsf:.3f} Hz")], p="sm", withBorder=True),
+            ],
+        )
 
     @app.callback(
         Output('metadata-display', 'children'),

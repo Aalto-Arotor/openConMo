@@ -1,8 +1,8 @@
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
-from layouts import create_left_panel
-from callbacks import register_callbacks
+from layouts import create_left_panel, create_bearing_fault_panel
+from callbacks import register_callbacksclc
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
@@ -11,6 +11,7 @@ app = dash.Dash(__name__)
 app.layout = html.Div([
     dmc.Container([
         dmc.Group([
+            create_bearing_fault_panel(),
             # Left panel
             create_left_panel(),
             
