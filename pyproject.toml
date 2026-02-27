@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openconmo"
-version =  "0.0.5"
+version =  "0.0.6"
 description = "A Python package for vibration signal based condition monitoring"
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [
@@ -22,11 +22,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "dash>=2.18.2,<3.0.0",
-    "dash-mantine-components==0.12.1",
     "numpy>=2.2.3,<3.0.0",
     "pandas>=2.2.3,<3.0.0",
-    "plotly>=6.0.0,<7.0.0",
     "scipy>=1.15.2,<2.0.0",
     "matplotlib>=3.10.0,<4.0.0",
     "tqdm>=4.67.1,<5.0.0",
