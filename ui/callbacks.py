@@ -1,9 +1,12 @@
-# import sys
-# import os
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# from src.openconmo.benchmark_methods import envelope, cepstrum_prewhitening, benchmark_method
-from figures import create_time_series_plot, create_frequency_domain_plot, create_dummy_figure, create_envelope_spectrum_plot, squared_envelope_plot, cepstrum_prewhitening_plot, benchmark_plot
+from figures import (
+    create_time_series_plot,
+    create_dummy_figure,
+    squared_envelope_plot,
+    cepstrum_prewhitening_plot,
+    benchmark_plot,
+    add_harmonic_lines,
+    update_axis_ranges,
+)
 from utils import read_from_parquet
 
 from dash.dependencies import Input, Output, State
@@ -13,11 +16,10 @@ import numpy as np
 
 def register_callbacks(app):
     '''Register all Dash app callbacks for plot updates and metadata display.'''
+    
     @app.callback(
         [Output('time-plot', 'figure'),
-         # Output('frequency-plot', 'figure'),
          Output('envelope-plot', 'figure')],
-         
         [Input('upload-data', 'contents'),
          Input('dummy-dropdown-1', 'value'),
          Input('time-start', 'value'),
@@ -32,218 +34,130 @@ def register_callbacks(app):
          Input('freq-scale', 'value'),
          Input('amp-scale', 'value')]
     )
-
     def update_plots(contents, dropdown_value, time_start, time_stop, 
                     x_lim_1, x_lim_2, y_lim_1, y_lim_2,
                     ff_hz, n_harmonics, f_sb_hz, freq_scale, amp_scale):
-        '''Update time, frequency, and envelope plots based on uploaded data and user-selected parameters.'''
-
+        
         if contents is None:
             dummy_fig = create_dummy_figure("Upload a file")
             return dummy_fig, dummy_fig
         
         try:
-            signal, fs, name, measurement_location, unit, meas_id, fault, fault_frequencies, rotating_freq_hz = read_from_parquet(contents)
+            signal, fs, name, loc, unit, meas_id, fault, fault_freqs, rot_freq = read_from_parquet(contents)
             
-            # Convert time to indices
             start_idx = max(0, int(time_start * fs))
             stop_idx = min(len(signal), int(time_stop * fs))
-            
-            # Slice the signal
             signal_slice = signal[start_idx:stop_idx]
             
-            # Create plots
-            title_upper = f"Time Domain - {name} - {measurement_location} (ID: {meas_id})"
-            title_envelope = f"Envelope Spectrum - {name} - {measurement_location} (ID: {meas_id})"
+            title_upper = f"Time Domain - {name} - {loc} (ID: {meas_id})"
+            title_env = f"Envelope Spectrum - {name} - {loc} (ID: {meas_id})"
             
             upper_plot = create_time_series_plot(signal_slice, fs, title=title_upper, unit=unit)
             
             if dropdown_value == "1":
-                envelope_plot = squared_envelope_plot(signal_slice, fs, title=title_envelope, unit=unit)
+                env_plot = squared_envelope_plot(signal_slice, fs, title=title_env, unit=unit)
             elif dropdown_value == "2":
-                envelope_plot = cepstrum_prewhitening_plot(signal_slice, fs)
-            elif dropdown_value == "3":
-                envelope_plot = benchmark_plot(signal_slice, fs)
-            
-            def add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz):
-                '''Overlay harmonic and optional sideband lines on a frequency-domain plot.'''
-                if not (ff_hz and n_harmonics and ff_hz > 0):
-                    return
+                env_plot = cepstrum_prewhitening_plot(signal_slice, fs)
+            else:
+                env_plot = benchmark_plot(signal_slice, fs)
 
-                for i in range(1, n_harmonics + 1):
-                    harmonic_freq = ff_hz * i * rotating_freq_hz
-                    ymax = max(plot['data'][0]['y'])
-                    
-                    # Only set name and showlegend for the first harmonic
-                    if i == 1:
-                        name = f'Harmonics of expected FF'
-                        showlegend = True
-                    else:
-                        name = ''
-                        showlegend = False
-
-                    plot['data'].append({
-                        'x': [harmonic_freq, harmonic_freq],
-                        'y': [0, ymax],
-                        'type': 'scatter',
-                        'mode': 'lines',
-                        'line': {'color': 'red', 'dash': 'dash', 'width': 1},
-                        'name': name,
-                        'yaxis': 'y',
-                        'hoverinfo': 'name',
-                        'showlegend': showlegend
-                    })
-
-                    if f_sb_hz and f_sb_hz > 0:
-                        add_sideband_lines(plot, harmonic_freq, f_sb_hz)
-                        
-            def add_sideband_lines(plot, harmonic_freq, f_sb_hz):
-                """Add sideband lines around a given harmonic frequency on the plot."""
-                ymax = max(plot['data'][0]['y'])
-
-                # Have we already added a visible legend entry for sidebands?
-                sideband_legend_already = any(
-                    (t.get('name') == '1st-order sidebands at ± SB') and t.get('showlegend')
-                    for t in plot.get('data', [])
-                )
-
-                for idx, offset in enumerate([-f_sb_hz, f_sb_hz]):
-                    freq = harmonic_freq + offset
-
-                    # Only the very first sideband pair across ALL harmonics gets a legend
-                    showlegend = (not sideband_legend_already) and (idx == 0)
-                    name = '1st-order sidebands at ± SB' if showlegend else None
-
-                    plot['data'].append({
-                        'x': [freq, freq],
-                        'y': [0, ymax],
-                        'type': 'scatter',
-                        'mode': 'lines',
-                        'line': {'color': 'red', 'dash': 'dot', 'width': 1},
-                        'name': name,
-                        'yaxis': 'y',
-                        'hoverinfo': 'name',
-                        'showlegend': showlegend
-                    })
-
-            def update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale):
-                '''Adjust x and y axis ranges and scaling types based on user input.'''
-                if x_lim_1 is not None and x_lim_2 is not None and x_lim_1 < x_lim_2:
-                    if freq_scale == 'log':
-                        plot['layout']['xaxis']['range'] = [np.log10(max(1e-10, x_lim_1)), np.log10(x_lim_2)]
-                    else:
-                        plot['layout']['xaxis']['range'] = [x_lim_1, x_lim_2]
-                
-                if y_lim_1 is not None and y_lim_2 is not None and y_lim_1 < y_lim_2:
-                    if amp_scale == 'log':
-                        plot['layout']['yaxis']['range'] = [np.log10(max(1e-10, y_lim_1)), np.log10(y_lim_2)]
-                    else:
-                        plot['layout']['yaxis']['range'] = [y_lim_1, y_lim_2]
-
-            # Update scales and add harmonic lines for frequency plots
-            for plot in [envelope_plot]:
+            for plot in [env_plot]:
                 plot['layout']['xaxis']['type'] = freq_scale
                 plot['layout']['yaxis']['type'] = amp_scale
-                
-                add_harmonic_lines(plot, ff_hz, n_harmonics, rotating_freq_hz, f_sb_hz)
+                add_harmonic_lines(plot, ff_hz, n_harmonics, rot_freq, f_sb_hz)
                 update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale)
-                
-            if ff_hz and n_harmonics and ff_hz > 0:
-                plot['layout']['showlegend'] = True
-                plot['layout']['legend'] = {
-                    'orientation': 'h',
-                    'yanchor': 'top',
-                    'y': -0.5,      # Negative value puts it below the plot
-                    'xanchor': 'center',
-                    'x': 0.5
-                }
 
-            return upper_plot, envelope_plot
+                if ff_hz and n_harmonics and ff_hz > 0:
+                    plot['layout']['showlegend'] = True
+                    plot['layout']['legend'] = {
+                        'orientation': 'h',
+                        'yanchor': 'top',
+                        'y': -0.5,
+                        'xanchor': 'center',
+                        'x': 0.5
+                    }
+
+            return upper_plot, env_plot
             
         except Exception as e:
             print(f"Error reading file: {str(e)}")
-            error_fig = create_dummy_figure(f"Error reading file: {str(e)}")
+            error_fig = create_dummy_figure(f"Error: {str(e)}")
             return error_fig, error_fig
 
     @app.callback(
-    Output("bearing-fault-results", "children"),
-    Input("bearing-calc-btn", "n_clicks"),
-    State("bearing-speed-rpm", "value"),
-    State("bearing-n-rollers", "value"),
-    State("bearing-ball-d-mm", "value"),
-    State("bearing-pitch-d-mm", "value"),
-    State("bearing-contact-angle-deg", "value"),
-    prevent_initial_call=True,
+        Output("bearing-fault-results", "children"),
+        Input("bearing-calc-btn", "n_clicks"),
+        State("bearing-speed-rpm", "value"),
+        State("bearing-n-rollers", "value"),
+        State("bearing-ball-d-mm", "value"),
+        State("bearing-pitch-d-mm", "value"),
+        State("bearing-contact-angle-deg", "value"),
+        prevent_initial_call=True,
     )
     def calculate_bearing_faults(n_clicks, rpm, n, d_mm, D_mm, theta_deg):
-        vals = [rpm, n, d_mm, D_mm, theta_deg]
-        if any(v is None for v in vals):
-            return dmc.Alert("Please fill in all parameters.", color="yellow")
+        if rpm is None or n is None or d_mm is None or D_mm is None or theta_deg is None:
+            return dmc.Alert("Please fill all bearing inputs before calculating.", color="yellow", title="Missing Input")
 
-        if rpm <= 0 or n <= 0 or d_mm <= 0 or D_mm <= 0:
-            return dmc.Alert("RPM, N, d and D must be > 0.", color="red")
+        if rpm <= 0 or n < 1 or d_mm <= 0 or D_mm <= 0:
+            return dmc.Alert(
+                "Shaft speed, number of rolling elements, and diameters must be positive.",
+                color="yellow",
+                title="Invalid Input",
+            )
 
         if d_mm >= D_mm:
-            return dmc.Alert("Pitch diameter D must be greater than rolling element diameter d.", color="red")
+            return dmc.Alert(
+                "Rolling element diameter d must be smaller than pitch diameter D.",
+                color="red",
+                title="Invalid Bearing Geometry",
+            )
 
         fr = rpm / 60.0
         ratio = (d_mm / D_mm) * np.cos(np.radians(theta_deg))
-
-        ftf = 0.5 * fr * (1 - ratio)
-        bpfo = 0.5 * n * fr * (1 - ratio)
-        bpfi = 0.5 * n * fr * (1 + ratio)
-        bsf = (D_mm / (2 * d_mm)) * fr * (1 - ratio**2)
-
+        
         return dmc.SimpleGrid(
-            cols=4,
-            spacing="sm",
+            cols=2,
+            spacing="xs",
             children=[
-                dmc.Paper([dmc.Text("FTF", fw=700), dmc.Text(f"{ftf:.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BPFO", fw=700), dmc.Text(f"{bpfo:.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BPFI", fw=700), dmc.Text(f"{bpfi:.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BSF", fw=700), dmc.Text(f"{bsf:.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("FTF", fw=700, size="xs"), dmc.Text(f"{0.5*fr*(1-ratio):.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BPFO", fw=700, size="xs"), dmc.Text(f"{0.5*n*fr*(1-ratio):.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BPFI", fw=700, size="xs"), dmc.Text(f"{0.5*n*fr*(1+ratio):.3f} Hz")], p="sm", withBorder=True),
+                dmc.Paper([dmc.Text("BSF", fw=700, size="xs"), dmc.Text(f"{(D_mm/(2*d_mm))*fr*(1-ratio**2):.3f} Hz")], p="sm", withBorder=True),
             ],
         )
 
     @app.callback(
         Output('metadata-display', 'children'),
-        [Input('upload-data', 'contents')]
+        Input('upload-data', 'contents')
     )
     def update_metadata(contents):
-        '''Display signal metadata from uploaded file in a formatted table.'''
         if contents is None:
-            return [dmc.Text("No file uploaded yet", c="dimmed")]
+            return dmc.Text("No file uploaded yet", c="dimmed")
         
         try:
-            signal, fs, name, measurement_location, unit, meas_id, fault, fault_frequencies, rotating_freq_hz = read_from_parquet(contents)
-            return [
-                dmc.Table(
-                    children=[
-                        html.Tbody([
-                            html.Tr([html.Td("Name:"), html.Td(name)]),
-                            html.Tr([html.Td("Meas location:"), html.Td(measurement_location)]),
-                            html.Tr([html.Td("Meas ID:"), html.Td(str(meas_id))]),
-                            html.Tr([html.Td("Sampling Rate:"), html.Td(f"{fs} Hz")]),
-                            html.Tr([html.Td("N samples:"), html.Td(f"{len(signal)}")]),
-                            html.Tr([html.Td("Unit:"), html.Td(unit)]),
-                            html.Tr([html.Td("Fault:"), html.Td(fault)]),
-                            html.Tr([html.Td("Rotating Frequency:"), html.Td(f"{rotating_freq_hz:.2f} Hz")]),
-                            html.Tr([
-                                html.Td("Fault Frequencies:"), 
-                                html.Td(
-                                    dmc.Stack([
-                                        dmc.Text(f"{type}: {val:.2f}")
-                                        for _, freqs in fault_frequencies.items() 
-                                        for type, val in freqs.items()
-                                    ], justify="xs")
-                                )
-                            ])
-                        ])
-                    ],
-                    striped=True,
-                    highlightOnHover=True
-                )
-            ]
+            signal, fs, name, loc, unit, m_id, fault, f_freqs, rot_freq = read_from_parquet(contents)
             
+            return dmc.Table(
+                striped=True,
+                highlightOnHover=True,
+                withTableBorder=True,
+                children=[
+                    dmc.TableTbody([
+                        dmc.TableTr([dmc.TableTd("Name:"), dmc.TableTd(name)]),
+                        dmc.TableTr([dmc.TableTd("Meas location:"), dmc.TableTd(loc)]),
+                        dmc.TableTr([dmc.TableTd("Sampling Rate:"), dmc.TableTd(f"{fs} Hz")]),
+                        dmc.TableTr([
+                            dmc.TableTd("Fault Frequencies:"), 
+                            dmc.TableTd(
+                                dmc.Stack([
+                                    dmc.Text(f"{f_type}: {val:.2f}")
+                                    for _, freqs in f_freqs.items() 
+                                    for f_type, val in freqs.items()
+                                ], gap="xs")
+                            )
+                        ])
+                    ])
+                ]
+            )
         except Exception as e:
-            return [dmc.Alert(f"Error reading metadata: {str(e)}", c="red")] 
+            return dmc.Alert(f"Error: {str(e)}", color="red", title="Upload Error")

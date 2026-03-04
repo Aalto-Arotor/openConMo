@@ -1,35 +1,42 @@
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
-from layouts import create_left_panel, create_bearing_fault_panel
-from callbacks import register_callbacksclc
+from pathlib import Path
+from flask import send_from_directory
+from layouts import create_layout
+from callbacks import register_callbacks
 
-# Initialize the Dash app
+dmc.pre_render_color_scheme()
+
 app = dash.Dash(__name__)
 
-# Create the layout
-app.layout = html.Div([
-    dmc.Container([
-        dmc.Group([
-            create_bearing_fault_panel(),
-            # Left panel
-            create_left_panel(),
-            
-            # Right panel for plots
-            dmc.Paper([
-                dmc.Title("Signal Analysis Plots", order=3, align="Left"),  # Adding a title
-                dcc.Graph(id='time-plot'),
-                dcc.Graph(id='envelope-plot'),
-            ], style={'flex': '1'}, p="md", shadow="sm")
-        ], grow=False, align="flex-start")
-    ], fluid=True, p=0)
-])
+_logo_dir = Path(__file__).resolve().parents[1] / "docs" / "_images"
+
+
+@app.server.route("/static/openconmo_logo.png")
+def serve_openconmo_logo():
+    return send_from_directory(_logo_dir, "openconmo_logo.png")
+
+app.layout = dmc.MantineProvider(
+    children=[
+        dmc.NotificationContainer(id="notifications-container"),
+        
+        # This calls the AppShell structure defined in your updated layouts.py
+        create_layout()
+    ],
+    # You can set default theme settings here
+    theme={
+        "primaryColor": "blue",
+        "fontFamily": "'Inter', sans-serif",
+    }
+)
 
 # Register callbacks
 register_callbacks(app)
 
 def main():
-    app.run_server(debug=True)
+    # Note: Use dash.run instead of run_server in newer Dash versions (optional but recommended)
+    app.run(debug=True)
 
 if __name__ == '__main__':
     main()

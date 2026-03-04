@@ -1,330 +1,425 @@
 from dash import html, dcc
 import dash_mantine_components as dmc
 
-def create_bearing_fault_panel():
-    """Top panel for bearing fault frequency calculation."""
-    return dmc.Paper(
-        [
-            dmc.Title("Bearing Fault Frequency Calculator", order=3),
+# def create_bearing_fault_panel():
+#     """Top panel for bearing fault frequency calculation."""
+#     return dmc.Paper(
+#         [
+#             dmc.Title("Fault Frequency Calculator", order=3),
 
-            dmc.Stack(
-                [
-                    dmc.NumberInput(
-                        id="bearing-speed-rpm",
-                        label="Shaft speed (RPM)",
-                        value=0,
-                        min=0,
-                        step=10,
-                        style={"width": "260px"},
-                    ),
-                    dmc.NumberInput(
-                        id="bearing-n-rollers",
-                        label="Number of rolling elements (N)",
-                        value=0,
-                        min=1,
-                        step=1,
-                        precision=0,
-                        style={"width": "260px"},
-                    ),
-                    dmc.NumberInput(
-                        id="bearing-ball-d-mm",
-                        label="Rolling element diameter d (mm)",
-                        value=0,
-                        min=0,
-                        step=0.1,
-                        precision=3,
-                        style={"width": "260px"},
-                    ),
-                    dmc.NumberInput(
-                        id="bearing-pitch-d-mm",
-                        label="Pitch diameter D (mm)",
-                        value=0,
-                        min=0,
-                        step=0.1,
-                        precision=3,
-                        style={"width": "260px"},
-                    ),
-                    dmc.NumberInput(
-                        id="bearing-contact-angle-deg",
-                        label="Contact angle θ (deg)",
-                        value=0.0,
-                        step=0.1,
-                        precision=3,
-                        style={"width": "260px"},
-                    ),
-                    dmc.Button("Calculate", id="bearing-calc-btn", n_clicks=0, style={"width": "260px"}),
-                ],
-                spacing="sm",
-                align="stretch",
-            ),
+#             dmc.Stack(
+#                 [
+#                     dmc.NumberInput(
+#                         id="bearing-speed-rpm",
+#                         label="Shaft speed (RPM)",
+#                         value=0,
+#                         min=0,
+#                         step=10,
+#                         style={"width": "260px"},
+#                     ),
+#                     dmc.NumberInput(
+#                         id="bearing-n-rollers",
+#                         label="Number of rolling elements (N)",
+#                         value=0,
+#                         min=1,
+#                         step=1,
+#                         decimalScale=0, # Changed from precision
+#                         style={"width": "260px"},
+#                     ),
+#                     dmc.NumberInput(
+#                         id="bearing-ball-d-mm",
+#                         label="Rolling element diameter d (mm)",
+#                         value=0,
+#                         min=0,
+#                         step=0.1,
+#                         decimalScale=3, # Changed from precision
+#                         style={"width": "260px"},
+#                     ),
+#                     dmc.NumberInput(
+#                         id="bearing-pitch-d-mm",
+#                         label="Pitch diameter D (mm)",
+#                         value=0,
+#                         min=0,
+#                         step=0.1,
+#                         decimalScale=3, # Changed from precision
+#                         style={"width": "260px"},
+#                     ),
+#                     dmc.NumberInput(
+#                         id="bearing-contact-angle-deg",
+#                         label="Contact angle θ (deg)",
+#                         value=0.0,
+#                         step=0.1,
+#                         decimalScale=3, # Changed from precision
+#                         style={"width": "260px"},
+#                     ),
+#                     dmc.Button("Calculate", id="bearing-calc-btn", n_clicks=0, style={"width": "260px"}),
+#                 ],
+#                 gap="sm", # Changed from spacing
+#                 align="stretch",
+#             ),
 
-            dmc.Divider(my="sm"),
-            dmc.Paper(
-                id="bearing-fault-results",
-                p="sm",
-                withBorder=True,
-                children=dmc.Text("No calculation yet.", c="dimmed"),
-            ),
-        ],
-        p="md",
-        withBorder=True,
-        radius="md",
-    )
-def create_left_panel():
-    """Create the left panel with controls and metadata display"""
-    return dmc.Group([
-        # Left side - Upload and Metadata
-        dmc.Stack([
-            # Upload section
-            dmc.Paper([
-                dmc.Title("Upload Data", order=3),
-                dcc.Upload(
-                    id='upload-data',
-                    children=dmc.Group([
-                        dmc.Text('Drag and Drop or'),
-                        dmc.Text('Select Parquet file', c="blue", fw=500),
-                    ], position="center"),
-                    style={
-                        'width': '100%',
-                        'height': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
-                        'textAlign': 'center',
-                        'margin': '10px 0',
-                    },
-                    accept='.parquet',
-                    multiple=False
-                ),
-            ], p="md", style={'width': '380px'}),
+#             dmc.Divider(my="xs"),
+#             dmc.Paper(
+#                 id="bearing-fault-results",
+#                 p="sm",
+#                 withBorder=True,
+#                 children=dmc.Text("No calculation yet.", c="dimmed", size="xs"),
+#             ),
+#         ],
+#         p="sm",
+#         withBorder=True,
+#         radius="sm",
+#     )
+
+# def create_left_panel():
+#     """Create the left panel with all controls stacked vertically"""
+#     return dmc.Group([  # Changed from dmc.Group to dmc.Stack
+#         # Section 1 - Upload and Metadata
+#         dmc.Stack([
+#             # Upload section
+#             dmc.Paper([
+#                 dmc.Title("Upload Data", order=3),
+#                 dcc.Upload(
+#                     id='upload-data',
+#                     children=dmc.Group([
+#                         dmc.Text('Drag and Drop or'),
+#                         dmc.Text('Select Parquet file', c="blue", fw=500),
+#                     ], justify="center"),
+#                     style={
+#                         'width': '100%',
+#                         'height': '60px',
+#                         'borderWidth': '1px',
+#                         'borderStyle': 'dashed',
+#                         'borderRadius': '5px',
+#                         'textAlign': 'center',
+#                         'margin': '10px 0',
+#                     },
+#                     accept='.parquet',
+#                     multiple=False
+#                 ),
+#             ], p="sm", style={'width': '380px'}), # Standardized width
             
-            # Metadata section
-            dmc.Paper([
-                dmc.Title("Measurement Info", order=3),
-                dmc.Paper(
-                    id='metadata-display',
-                    children=[
-                        dmc.Text("No file uploaded yet", c="dimmed")
-                    ],
-                    p="md",
-                    withBorder=True,
-                    mt="sm"
-                )
-            ], p="md", style={'width': '380px'})
-        ], spacing="md"),
+#             # Metadata section
+#             dmc.Paper([
+#                 dmc.Title("Measurement Info", order=3),
+#                 dmc.Paper(
+#                     id='metadata-display',
+#                     children=[
+#                         dmc.Text("No file uploaded yet", c="dimmed")
+#                     ],
+#                     p="sm",
+#                     withBorder=True,
+#                     mt="sm"
+#                 )
+#             ], p="sm", style={'width': '380px'})
+#         ], gap="sm"),
         
-        # Right side - Options Panel
-        dmc.Paper([
-            dmc.Title("Choose method", order=3),
+#         # Section 2 - Options Panel (Now sitting underneath)
+#         dmc.Paper([
+#             dmc.Title("Choose method", order=3),
+#             dmc.Stack([
+#                 dmc.Select(
+#                     id='dummy-dropdown-1',
+#                     data=[
+#                         {'label': 'Envelope', 'value': '1'},
+#                         {'label': 'Cepstrum prewhitening', 'value': '2'},
+#                         {'label': 'Benchmark', 'value': '3'}
+#                     ],
+#                     value='1',
+#                 ),
+                
+#                 # Time range inputs
+#                 dmc.Text("Time Range (seconds)", fw=500, mt="sm"),
+#                 dmc.Group([
+#                     dmc.NumberInput(id='time-start', value=0, step=1, decimalScale=2, label="Start", style={'width': '44%'}),
+#                     dmc.NumberInput(id='time-stop', value=10, step=1, decimalScale=2, label="Stop", style={'width': '44%'}),
+#                 ]),
+                
+#                 # Limits selection
+#                 dmc.Text("Spectrum limits", fw=500, mt="sm"),
+#                 dmc.Group([
+#                     dmc.NumberInput(id='x_lim_1', value=0, step=100, decimalScale=2, label="x min", style={'width': '20%'}),
+#                     dmc.NumberInput(id='x_lim_2', value=500, step=100, decimalScale=0, label="x max", style={'width': '20%'}),
+#                     dmc.NumberInput(id='y_lim_1', value=0, step=0.01, decimalScale=4, label="y min", style={'width': '20%'}),
+#                     dmc.NumberInput(id='y_lim_2', value=0, step=0.01, decimalScale=4, label="y max", style={'width': '20%'}),
+#                 ], gap="xs"),
+                
+#                 # Cursor selection
+#                 dmc.Text("Cursor selection", fw=500, mt="sm"),
+#                 dmc.Group([
+#                     dmc.NumberInput(id='ff_hz', value=0, step=0.001, decimalScale=3, label="FF (Hz)", style={'width': '27%'}),
+#                     dmc.NumberInput(id='n_harmonics', value=3, step=1, decimalScale=0, label="N harm.", style={'width': '27%'}),
+#                     dmc.NumberInput(id='f_sb_hz', value=0, step=0.01, decimalScale=2, label="SB (Hz)", style={'width': '27%'}),
+#                 ], gap="xs"),
+                
+#                 # Scale controls
+#                 dmc.Text("Frequency Scale", fw=500, mt="sm"),
+#                 dmc.SegmentedControl(id='freq-scale', data=['linear', 'log'], value='linear', fullWidth=True),
+                
+#                 dmc.Text("Amplitude Scale", fw=500, mt="sm"),
+#                 dmc.SegmentedControl(id='amp-scale', data=['linear', 'log'], value='linear', fullWidth=True),
+#             ], gap="sm"),
+#         ], p="sm", style={'width': '380px'}, withBorder=True) # Standardized width
+#     ], align="flex-start", gap="sm")
+
+def create_top_panel():
+    """Restored 3-column layout with all original inputs and DMC v2.6.0 syntax."""
+    return dmc.Group(
+        align="flex-start",
+        gap="md",
+        children=[
+            # COLUMN 1: Bearing Fault Frequency Calculator
+            dmc.Paper(
+                [
+                    dmc.Title("Fault Frequency Calculator", order=3, mb="sm"),
+                    dmc.Stack(
+                        [
+                            dmc.NumberInput(
+                                id="bearing-speed-rpm", label="Shaft speed (RPM)",
+                                value=0, min=0, step=10, w=260
+                            ),
+                            dmc.NumberInput(
+                                id="bearing-n-rollers", label="Number of rolling elements (N)",
+                                value=0, min=1, step=1, decimalScale=0, w=260
+                            ),
+                            dmc.NumberInput(
+                                id="bearing-ball-d-mm", label="Rolling element diameter d (mm)",
+                                value=0, min=0, step=0.1, decimalScale=3, w=260
+                            ),
+                            dmc.NumberInput(
+                                id="bearing-pitch-d-mm", label="Pitch diameter D (mm)",
+                                value=0, min=0, step=0.1, decimalScale=3, w=260
+                            ),
+                            dmc.NumberInput(
+                                id="bearing-contact-angle-deg", label="Contact angle θ (deg)",
+                                value=0.0, step=0.1, decimalScale=3, w=260
+                            ),
+                            dmc.Button("Calculate", id="bearing-calc-btn", n_clicks=0, w=260),
+                        ],
+                        gap="xs"
+                    ),
+                    dmc.Divider(my="xs"),
+                    dmc.Paper(
+                        id="bearing-fault-results",
+                        p="sm",
+                        withBorder=True,
+                        children=dmc.Text("No calculation yet.", c="dimmed", size="xs"),
+                    ),
+                ],
+                p="sm", withBorder=True, radius="sm"
+            ),
+
+            # COLUMN 2: Upload and Metadata
             dmc.Stack([
-                dmc.Select(
-                    id='dummy-dropdown-1',
-                    data=[
-                        {'label': 'Envelope', 'value': '1'},
-                        {'label': 'Cepstrum prewhitening', 'value': '2'},
-                        {'label': 'Benchmark', 'value': '3'}
-                    ],
-                    value='1',
-                ),
+                dmc.Paper([
+                    dmc.Title("Upload Data", order=3),
+                    dcc.Upload(
+                        id='upload-data',
+                        children=dmc.Group([
+                            dmc.Text('Drag and Drop or'),
+                            dmc.Text('Select Parquet file', c="blue", fw=500),
+                        ], justify="center"),
+                        style={
+                            'width': '100%', 'height': '60px', 'borderWidth': '1px',
+                            'borderStyle': 'dashed', 'borderRadius': '5px',
+                            'textAlign': 'center', 'margin': '10px 0',
+                        },
+                        accept='.parquet',
+                        multiple=False
+                    ),
+                ], p="sm", w=380),
                 
-                # Time range inputs
-                dmc.Text("Time Range (seconds)", fw=500, mt="sm"),
-                dmc.Group([
-                    dmc.NumberInput(
-                        id='time-start',
-                        value=0,
-                        step=1,
-                        precision=2,
-                        label="Start",
-                        style={'width': '44%'}
-                    ),
-                    dmc.NumberInput(
-                        id='time-stop',
-                        value=10,
-                        step=1,
-                        precision=2,
-                        label="Stop",
-                        style={'width': '44%'}
-                    ),
-                ]),
-                
-                # Limits selection
-                dmc.Text("Spectrum limits", fw=500, mt="sm"),
-                dmc.Group([
-                    dmc.NumberInput(
-                        id='x_lim_1',
-                        value=0,
-                        step=100,
-                        precision=2,
-                        label="x min",
-                        style={'width': '20%'}
-                    ),
-                    dmc.NumberInput(
-                        id='x_lim_2',
-                        value=500,
-                        step=100,
-                        precision=0,
-                        label="x max",
-                        style={'width': '20%'}
-                    ),
-                    dmc.NumberInput(
-                        id='y_lim_1',
-                        value=0,
-                        step=0.01,
-                        precision=4,
-                        label="y min",
-                        style={'width': '20%'}
-                    ),
-                    dmc.NumberInput(
-                        id='y_lim_2',
-                        value=0,
-                        step=0.01,
-                        precision=4,
-                        label="y max",
-                        style={'width': '20%'}
-                    ),
-                ]),
-                # Cursor selection
-                dmc.Text("Cursor selection", fw=500, mt="sm"),
-                dmc.Group([
-                    dmc.NumberInput(
-                        id='ff_hz',
-                        value=0,
-                        step=0.001,
-                        precision=3,
-                        label="FF (X rot. freq)",
-                        style={'width': '27%'}
-                    ),
-                    dmc.NumberInput(
-                        id='n_harmonics',
-                        value=3,
-                        step=1,
-                        precision=0,
-                        label="N harmonics",
-                        style={'width': '27%'}
-                    ),
-                    dmc.NumberInput(
-                        id='f_sb_hz',
-                        value=0,
-                        step=0.01,
-                        precision=2,
-                        label="SB (Hz)",
-                        style={'width': '27%'}
-                    ),
-                ]),
-                
-                # Scale controls
-                dmc.Text("Frequency Scale", fw=500, mt="sm"),
-                dmc.SegmentedControl(
-                    id='freq-scale',
-                    data=[
-                        {'label': 'Linear', 'value': 'linear'},
-                        {'label': 'Logarithmic', 'value': 'log'}
-                    ],
-                    value='linear',
-                    fullWidth=True
-                ),
-                
-                dmc.Text("Amplitude Scale", fw=500, mt="sm"),
-                dmc.SegmentedControl(
-                    id='amp-scale',
-                    data=[
-                        {'label': 'Linear', 'value': 'linear'},
-                        {'label': 'Logarithmic', 'value': 'log'}
-                    ],
-                    value='linear',
-                    fullWidth=True
-                ),
-            ], spacing="sm"),
-        ], p="md", style={'width': '400px'}, withBorder=True)
-    ], align="flex-start", spacing="md")
+                dmc.Paper([
+                    dmc.Title("Measurement Info", order=3),
+                    dmc.Paper(
+                        id='metadata-display',
+                        children=[dmc.Text("No file uploaded yet", c="dimmed")],
+                        p="sm", withBorder=True, mt="sm", mih=180
+                    )
+                ], p="sm", w=380)
+            ], gap="sm"),
 
-def create_plot_options():
-    """Create the plot options section"""
-    return html.Div([
-        html.Label("Dummy Option 1"),
-        dcc.Dropdown(
-            id='dummy-dropdown-1',
-            options=[
-                {'label': 'Option A', 'value': 'A'},
-                {'label': 'Option B', 'value': 'B'}
-            ],
-            value='A'
-        ),
-        html.Label("Common options:", style={'marginTop': '10px'}),
-        create_time_range_inputs(),
-        html.Label("Frequency domain options:", style={'marginTop': '10px'}),
-        create_scale_controls()
-    ])
+            # COLUMN 3: Analysis Method and Signal Options
+            dmc.Paper([
+                dmc.Title("Method", order=3, mb="sm"),
+                dmc.Stack([
+                    dmc.Select(
+                        id='dummy-dropdown-1',
+                        data=[
+                            {'label': 'Envelope', 'value': '1'},
+                            {'label': 'Cepstrum prewhitening', 'value': '2'},
+                            {'label': 'Benchmark', 'value': '3'}
+                        ],
+                        value='1',
+                    ),
+                    
+                    dmc.Text("Time Range (seconds)", fw=500, mt="xs"),
+                    dmc.Group([
+                        dmc.NumberInput(id='time-start', value=0, step=1, decimalScale=2, label="Start", w="47%"),
+                        dmc.NumberInput(id='time-stop', value=10, step=1, decimalScale=2, label="Stop", w="47%"),
+                    ], justify="apart"),
+                    
+                    dmc.Text("Spectrum limits", fw=500, mt="xs"),
+                    dmc.Group([
+                        dmc.NumberInput(id='x_lim_1', value=0, step=100, decimalScale=2, label="x min", w="22%"),
+                        dmc.NumberInput(id='x_lim_2', value=500, step=100, decimalScale=0, label="x max", w="22%"),
+                        dmc.NumberInput(id='y_lim_1', value=0, step=0.01, decimalScale=4, label="y min", w="22%"),
+                        dmc.NumberInput(id='y_lim_2', value=0, step=0.01, decimalScale=4, label="y max", w="22%"),
+                    ], gap="xs"),
+                    
+                    dmc.Text("Cursor selection", fw=500, mt="xs"),
+                    dmc.Group([
+                        dmc.NumberInput(id='ff_hz', value=0, step=0.001, decimalScale=3, label="FF (Hz)", w="30%"),
+                        dmc.NumberInput(id='n_harmonics', value=3, step=1, decimalScale=0, label="N harm.", w="30%"),
+                        dmc.NumberInput(id='f_sb_hz', value=0, step=0.01, decimalScale=2, label="SB (Hz)", w="30%"),
+                    ], gap="xs"),
+                    
+                    dmc.Group([
+                        dmc.Stack([
+                            dmc.Text("Frequency Scale", fw=500, size="xs"),
+                            dmc.SegmentedControl(id='freq-scale', data=['linear', 'log'], value='linear', fullWidth=True),
+                        ], gap=2, flex=1),
+                        dmc.Stack([
+                            dmc.Text("Amplitude Scale", fw=500, size="xs"),
+                            dmc.SegmentedControl(id='amp-scale', data=['linear', 'log'], value='linear', fullWidth=True),
+                        ], gap=2, flex=1),
+                    ], gap="md", mt="xs"),
+                ], gap="xs"),
+            ], p="sm", w=420, withBorder=True)
+        ],
+    )
 
-def create_time_range_inputs():
-    """Create the time range input section"""
-    return html.Div([
-        html.Label("Time Range (seconds)", style={'marginTop': '10px'}),
-        html.Div([
-            html.Div([
-                html.Label("Start", style={'fontSize': '0.9em'}),
-                dcc.Input(
-                    id='time-start',
-                    type='number',
-                    value=0,
-                    step=0.1,
-                    precision=2,
-                    style={'width': '100%'}
-                ),
-            ], style={'width': '48%', 'display': 'inline-block'}),
-            
-            html.Div([
-                html.Label("Stop", style={'fontSize': '0.9em'}),
-                dcc.Input(
-                    id='time-stop',
-                    type='number',
-                    value=10,
-                    step=0.1,
-                    precision=2,
-                    style={'width': '100%'}
-                ),
-            ], style={'width': '48%', 'display': 'inline-block', 'marginLeft': '4%'})
-        ], style={'display': 'flex', 'alignItems': 'flex-end'})
-    ])
+def create_header():
+    return dmc.AppShellHeader(
+        # The style goes HERE to affect the whole top bar
+        style={
+            "backgroundColor": "rgba(255, 255, 255, 0.3)", 
+            "backdropFilter": "blur(3px)", 
+            "WebkitBackdropFilter": "blur(10px)",
+            "borderBottom": "1px solid rgba(0, 0, 0, 0.05)",
+        },
+        children=[
+            dmc.Group(
+                justify="center",
+                align="center",
+                h="100%",
+                px="sm",
+                children=[
+                    html.Img(
+                        src="/static/openconmo_logo.png",
+                        style={
+                            "height": "70px", # Keep height here
+                            "width": "auto",
+                            "display": "block"
+                        }
+                    ),
+                ],
+            )
+        ]
+    )
 
-def create_scale_controls():
-    """Create the scale control radio buttons"""
-    return html.Div([
-        html.Label("Frequency Scale", style={'marginTop': '15px'}),
-        dcc.RadioItems(
-            id='freq-scale',
-            options=[
-                {'label': 'Linear', 'value': 'linear'},
-                {'label': 'Logarithmic', 'value': 'log'}
+def create_footer():
+    return dmc.AppShellFooter(
+        dmc.Group(
+            justify="space-between",
+            align="center",
+            h="100%",
+            px="sm",
+            children=[
+                dmc.Text("© 2026 Arotor", size="sm", c="dimmed"),
+                dmc.Text("v2.6", size="sm", c="dimmed"),
             ],
-            value='log',
-            inline=True,
-            style={'display': 'flex', 'justifyContent': 'space-around', 'width': '100%'}
-        ),
-        html.Label("Amplitude Scale", style={'marginTop': '15px'}),
-        dcc.RadioItems(
-            id='amp-scale',
-            options=[
-                {'label': 'Linear', 'value': 'linear'},
-                {'label': 'Logarithmic', 'value': 'log'}
-            ],
-            value='linear',
-            inline=True,
-            style={'display': 'flex', 'justifyContent': 'space-around', 'width': '100%'}
         )
-    ])
+    )
 
-def create_metadata_section():
-    """Create the metadata display section"""
-    return html.Div([
-        html.H4("Measurement Info", style={'marginTop': '20px'}),
-        html.Div(id='metadata-display', children=[
-            html.P("No file uploaded yet", style={'color': '#666'})
-        ], style={
-            'padding': '10px',
-            'backgroundColor': '#f8f9fa',
-            'borderRadius': '5px',
-            'marginTop': '10px'
-        })
-    ]) 
+def create_main_content():
+    # Define a common width for both sections
+    common_style = {"width": "100%", "maxWidth": "1200px"}
+
+    return dmc.AppShellMain(
+        dmc.Container(
+            fluid=True,
+            children=dmc.Stack(
+                align="center", # Centers both items in the stack
+                gap="lg",
+                children=[
+                    # --- CENTERED CONTROL PANEL ---
+                    dmc.Paper(
+                        withBorder=True,
+                        p="md",
+                        radius="md",
+                        shadow="xs",
+                        style=common_style, # Using the shared width logic
+                        children=[
+                            dmc.Group(
+                                align="flex-start",
+                                gap="xl",
+                                wrap="nowrap",
+                                children=[
+                                    create_top_panel(),
+                                ],
+                            ),
+                        ]
+                    ),
+
+                    # --- PLOTS SECTION (Now matches the width) ---
+                    dmc.Paper(
+                        p="md",
+                        withBorder=True,
+                        radius="md",
+                        shadow="xs",
+                        style=common_style, # Using the SAME shared width logic
+                        children=[
+                            dmc.Title("Signal Analysis Plots", order=4, mb="md"),
+                            dmc.Stack([
+                                dcc.Graph(id="time-plot"),
+                                dcc.Graph(id="envelope-plot"),
+                            ], gap="md")
+                        ],
+                    ),
+                    # --- ROW 3: ABOUT US (Simplified) ---
+                    dmc.Paper(
+                        p="xl",
+                        style={**common_style, "backgroundColor": "transparent"},
+                        children=[
+                            dmc.Divider(label="About OpenConMo", labelPosition="center", mb="md"),
+                            
+                            dmc.Text(
+                                "OpenConMo is an open-source Python library and platform for vibration signal-based condition monitoring developed at Aalto University Rotor Laboratory ARotor.",
+                                size="sm",
+                                c="dimmed",
+                                ta="center",
+                            ),
+                            
+                            dmc.Group(
+                                justify="center",
+                                gap="xl",
+                                mt="sm",
+                                children=[
+                                    dmc.Anchor("GitHub", href="https://github.com/Aalto-Arotor/openConMo", size="xs", underline=False),
+                                    dmc.Anchor("Documentation", href="https://aalto-arotor.github.io/openConMo/", size="xs", underline=False),
+                                    dmc.Anchor("Contact", href="mailto:arotor.software@aalto.fi", size="xs", underline=False),
+                                ],
+                            ),
+                        ],
+                    )
+                ],
+            ),
+        )
+    )
+
+def create_layout():
+    return dmc.AppShell(
+        padding="md",
+        # 1. Increase height to 100 to fit your 80px-90px logo comfortably
+        header={"height": 100}, 
+        footer={"height": 44},
+        style={
+            "backgroundColor": "#F5F5F5", 
+        },
+        children=[
+            create_header(),
+            create_footer(),
+            create_main_content(),
+        ],
+    )
