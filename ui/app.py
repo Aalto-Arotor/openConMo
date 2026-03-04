@@ -20,22 +20,17 @@ def serve_openconmo_logo():
 app.layout = dmc.MantineProvider(
     children=[
         dmc.NotificationContainer(id="notifications-container"),
-        
-        # This calls the AppShell structure defined in your updated layouts.py
         create_layout()
     ],
-    # You can set default theme settings here
     theme={
         "primaryColor": "blue",
         "fontFamily": "'Inter', sans-serif",
     }
 )
 
-# Register callbacks
 register_callbacks(app)
 
 def main():
-    # Note: Use dash.run instead of run_server in newer Dash versions (optional but recommended)
     app.run(debug=True)
 
 if __name__ == '__main__':
