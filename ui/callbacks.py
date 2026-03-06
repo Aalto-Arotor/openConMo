@@ -46,7 +46,6 @@ def register_callbacks(app):
         if value is None:
             return "1"
 
-        # Some component/state combinations may pass object-like values.
         if isinstance(value, dict):
             value = value.get("value", value.get("label", "1"))
 
@@ -127,16 +126,11 @@ def register_callbacks(app):
     ):
 
         if contents is None:
-            # Avoid overwriting already rendered plots with a dummy figure
-            # during transient multi-callback ordering on upload/reset.
             if existing_time_plot is not None and existing_env_plot is not None:
                 return no_update, no_update, no_update, no_update
             dummy_fig = create_dummy_figure("Upload a file")
             return dummy_fig, dummy_fig, None, None
 
-        # Set reasonable defaults for None values
-        # Normalize method value from UI (can arrive as None/int/str)
-        # and default to Envelope on upload.
         dropdown_value = _normalize_method_value(dropdown_value)
         ff_hz = _to_float(ff_hz, 0.0)
         n_harmonics = int(_to_float(n_harmonics, 0.0))
@@ -158,9 +152,6 @@ def register_callbacks(app):
             for prop in triggered_props.keys()
         )
 
-        # Always default to Envelope when a new file is uploaded.
-        # Use triggered props (not only triggered_id), because Dash can
-        # co-trigger multiple inputs on drop and report a non-upload id.
         if upload_triggered or triggered_id == "upload-data":
             dropdown_value = "1"
 
@@ -180,8 +171,6 @@ def register_callbacks(app):
             start_idx = max(0, int(time_start * fs))
             stop_idx = min(len(signal), int(time_stop * fs))
 
-            # Fallback to full signal when selected time window is empty
-            # or too short for spectrum calculation.
             if stop_idx - start_idx < 2:
                 start_idx = 0
                 stop_idx = len(signal)
@@ -230,7 +219,6 @@ def register_callbacks(app):
                         "x": 0.5,
                     }
 
-            # Extract spectrum x values for client-side wheel calculations
             x_vals = (
                 env_plot.get("data", [])[0].get("x", []) if env_plot else []
             )
@@ -240,9 +228,7 @@ def register_callbacks(app):
                 if isinstance(x, (int, float)) and np.isfinite(x)
             ]
 
-            # Interpolate for finer frequency resolution (10x more points)
             if len(x_vals_list) > 1:
-                # Create interpolated array with 10x more points
                 interpolated_x = np.interp(
                     np.linspace(
                         0, len(x_vals_list) - 1, len(x_vals_list) * 10
@@ -252,7 +238,6 @@ def register_callbacks(app):
                 )
                 x_vals_list = interpolated_x.tolist()
 
-            # Store as JSON string in hidden div for JavaScript to read
             import json
 
             x_vals_json = json.dumps(x_vals_list)
@@ -411,7 +396,6 @@ def register_callbacks(app):
         bpfi = 0.5 * n * fr * (1 + ratio)
         bsf = (D_mm / (2 * d_mm)) * fr * (1 - ratio**2)
 
-        # Store the calculated values
         freq_data = {"ftf": ftf, "bpfo": bpfo, "bpfi": bpfi, "bsf": bsf}
 
         display = dmc.SimpleGrid(
@@ -491,21 +475,26 @@ def register_callbacks(app):
                 read_from_parquet(contents)
             )
             meas_id_display = m_id if m_id is not None else "N/A"
+            fault_display = fault if fault is not None else "N/A"
             rot_freq_display = (
                 f"{float(rot_freq):.3f}"
                 if rot_freq is not None
                 else "N/A"
             )
 
-            # Create clickable fault frequency items and store their values
             freq_items = []
-            freq_data = {}
+            try:
+                rot_freq_num = float(rot_freq)
+            except (TypeError, ValueError):
+                rot_freq_num = None
+
+            freq_data = {"rotating_freq_hz": rot_freq_num}
             idx = 0
 
             for bearing_loc, freqs in f_freqs.items():
                 for f_type, val in freqs.items():
                     freq_id = f"parquet-freq-{idx}"
-                    freq_data[freq_id] = val
+                    freq_data[freq_id] = float(val)
                     freq_items.append(
                         html.Div(
                             dmc.Text(
@@ -535,6 +524,12 @@ def register_callbacks(app):
                                 ),
                                 dmc.TableTr(
                                     [
+                                        dmc.TableTd("Fault:"),
+                                        dmc.TableTd(str(fault_display)),
+                                    ]
+                                ),
+                                dmc.TableTr(
+                                    [
                                         dmc.TableTd("MAT file number:"),
                                         dmc.TableTd(str(meas_id_display)),
                                     ]
@@ -548,7 +543,7 @@ def register_callbacks(app):
                                 dmc.TableTr(
                                     [
                                         dmc.TableTd("Rotating frequency:"),
-                                        dmc.TableTd(f"{float(rot_freq):.3f} Hz"),
+                                        dmc.TableTd(f"{rot_freq_display} Hz"),
                                     ]
                                 ),
                                 dmc.TableTr(
@@ -600,7 +595,6 @@ def register_callbacks(app):
 
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        # Map the triggered component to its corresponding value from store
         value_map = {
             "ftf-click": freq_data.get("ftf"),
             "bpfo-click": freq_data.get("bpfo"),
@@ -612,8 +606,7 @@ def register_callbacks(app):
             return value_map[triggered_id]
 
         return current_ff
-
-    # Callback to update FF input when clicking on parquet fault frequencies
+    
     @app.callback(
         Output("ff_hz", "value", allow_duplicate=True),
         [Input({"type": "parquet-freq", "index": ALL}, "n_clicks")],
@@ -629,7 +622,6 @@ def register_callbacks(app):
 
         triggered_id = ctx.triggered[0]["prop_id"]
 
-        # Parse the triggered ID to get the index
         import json
 
         if triggered_id and triggered_id != ".":
@@ -639,7 +631,23 @@ def register_callbacks(app):
                     idx = id_dict.get("index")
                     freq_id = f"parquet-freq-{idx}"
                     if freq_id in freq_data:
-                        return freq_data[freq_id]
+                        base_multiplier = freq_data.get(freq_id)
+                        rotating_freq_hz = freq_data.get("rotating_freq_hz")
+
+                        try:
+                            base_multiplier = float(base_multiplier)
+                        except (TypeError, ValueError):
+                            return current_ff
+
+                        try:
+                            rotating_freq_hz = float(rotating_freq_hz)
+                        except (TypeError, ValueError):
+                            rotating_freq_hz = None
+
+                        if rotating_freq_hz is None:
+                            return base_multiplier
+
+                        return base_multiplier * rotating_freq_hz
             except json.JSONDecodeError:
                 pass
 
@@ -665,10 +673,6 @@ def register_callbacks(app):
         if x_val is None:
             return no_update
 
-        # Plotly/Dash may not always expose
-        # mouse button info in clickData.
-        # If present, honor middle-button
-        #  (button == 1). Otherwise, accept click.
         event_info = (
             click_data.get("event", {}) if isinstance(click_data, dict) else {}
         )
@@ -680,6 +684,3 @@ def register_callbacks(app):
             return float(x_val)
         except (TypeError, ValueError):
             return current_ff
-
-    # Client-side wheel handling is now in assets/spectrum_wheel.js
-    # No need for server callback - JavaScript handles bin calculation directly

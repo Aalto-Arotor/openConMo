@@ -9,7 +9,6 @@ def create_top_panel():
         align="flex-start",
         gap="md",
         children=[
-            # COLUMN 1: Bearing Fault Frequency Calculator
             dmc.Paper(
                 [
                     dmc.Title("Fault Frequency Calculator", order=3, mb="sm"),
@@ -82,7 +81,6 @@ def create_top_panel():
                 withBorder=True,
                 radius="sm",
             ),
-            # COLUMN 2: Upload and Metadata
             dmc.Stack(
                 [
                     dmc.Paper(
@@ -140,7 +138,6 @@ def create_top_panel():
                 ],
                 gap="sm",
             ),
-            # COLUMN 3: Analysis Method and Signal Options
             dmc.Paper(
                 [
                     dmc.Title("Method", order=3, mb="sm"),
@@ -179,7 +176,7 @@ def create_top_panel():
                                     ),
                                     dmc.NumberInput(
                                         id="time-stop",
-                                        value=10,
+                                        value=2,
                                         step=1,
                                         decimalScale=2,
                                         label="Stop",
@@ -328,7 +325,6 @@ def create_top_panel():
 
 def create_header():
     return dmc.AppShellHeader(
-        # The style goes HERE to affect the whole top bar
         style={
             "backgroundColor": "rgba(255, 255, 255, 0.3)",
             "backdropFilter": "blur(3px)",
@@ -345,7 +341,7 @@ def create_header():
                     html.Img(
                         src="/static/openconmo_logo.png",
                         style={
-                            "height": "70px",  # Keep height here
+                            "height": "70px",
                             "width": "auto",
                             "display": "block",
                         },
@@ -372,23 +368,21 @@ def create_footer():
 
 
 def create_main_content():
-    # Define a common width for both sections
     common_style = {"width": "100%", "maxWidth": "1200px"}
 
     return dmc.AppShellMain(
         dmc.Container(
             fluid=True,
             children=dmc.Stack(
-                align="center",  # Centers both items in the stack
+                align="center",
                 gap="lg",
                 children=[
-                    # --- CENTERED CONTROL PANEL ---
                     dmc.Paper(
                         withBorder=True,
                         p="md",
                         radius="md",
                         shadow="xs",
-                        style=common_style,  # Using the shared width logic
+                        style=common_style,
                         children=[
                             dmc.Group(
                                 align="flex-start",
@@ -400,13 +394,12 @@ def create_main_content():
                             ),
                         ],
                     ),
-                    # --- PLOTS SECTION (Now matches the width) ---
                     dmc.Paper(
                         p="md",
                         withBorder=True,
                         radius="md",
                         shadow="xs",
-                        style=common_style,  # Using shared width logic
+                        style=common_style,
                         children=[
                             dmc.Title(
                                 "Signal Analysis Plots", order=4, mb="md"
@@ -420,7 +413,6 @@ def create_main_content():
                             ),
                         ],
                     ),
-                    # --- ROW 3: ABOUT US (Simplified) ---
                     dmc.Paper(
                         p="xl",
                         style={
@@ -486,7 +478,6 @@ def create_main_content():
 def create_layout():
     return dmc.AppShell(
         padding="md",
-        # 1. Increase height to 100 to fit your 80px-90px logo comfortably
         header={"height": 100},
         footer={"height": 44},
         style={
