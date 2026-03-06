@@ -28,13 +28,14 @@ def create_time_series_plot(signal, fs, title="Time Series", unit=""):
                 "type": "scatter",
                 "mode": "lines",
                 "name": "Signal",
+                "showlegend": False,
             }
         ],
         "layout": {
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Time (s)"}},
-            "yaxis": {"title": {"text": f"Amplitude ({unit})"}},
+            "yaxis": {"title": {"text": "Amplitude"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
             "height": 350,
@@ -69,7 +70,7 @@ def create_frequency_domain_plot(
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Frequency (Hz)"}},
-            "yaxis": {"title": {"text": f"Magnitude ({unit})"}},
+            "yaxis": {"title": {"text": "Magnitude"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
         },
@@ -106,7 +107,7 @@ def create_envelope_spectrum_plot(
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Frequency (Hz)"}},
-            "yaxis": {"title": {"text": f"Envelope Mag ({unit})"}},
+            "yaxis": {"title": {"text": "Envelope Mag"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
         },
@@ -136,7 +137,7 @@ def squared_envelope_plot(
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Frequency (Hz)"}},
-            "yaxis": {"title": {"text": f"Envelope Mag ({unit})"}},
+            "yaxis": {"title": {"text": "Envelope Mag"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
         },
@@ -168,7 +169,7 @@ def cepstrum_prewhitening_plot(
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Frequency (Hz)"}},
-            "yaxis": {"title": {"text": f"Envelope Mag ({unit})"}},
+            "yaxis": {"title": {"text": "Envelope Mag"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
         },
@@ -196,7 +197,7 @@ def benchmark_plot(signal, fs, title="Benchmark Method", unit=""):
             "title": title,
             "template": "mantine_light",
             "xaxis": {"title": {"text": "Frequency (Hz)"}},
-            "yaxis": {"title": {"text": f"Envelope Mag ({unit})"}},
+            "yaxis": {"title": {"text": "Envelope Mag"}},
             "margin": {"l": 60, "r": 30, "t": 50, "b": 50},
             "hovermode": "x unified",
         },
@@ -273,6 +274,17 @@ def add_time_period_cursor(plot, ff_hz, cursor_center_s):
 
     if not ff_hz or ff_hz <= 0:
         return
+
+    plot.setdefault("layout", {})
+    plot["layout"]["legend"] = {
+        "orientation": "h",
+        "yanchor": "top",
+        "y": -0.25,
+        "xanchor": "center",
+        "x": 0.5,
+    }
+    margin = plot["layout"].setdefault("margin", {})
+    margin["b"] = max(margin.get("b", 50), 90)
 
     x = np.asarray(plot["data"][0].get("x", []), dtype=float)
     y = np.asarray(plot["data"][0].get("y", []), dtype=float)

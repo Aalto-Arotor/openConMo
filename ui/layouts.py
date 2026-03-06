@@ -149,14 +149,22 @@ def create_top_panel():
                             dmc.Select(
                                 id="dummy-dropdown-1",
                                 data=[
-                                    {"label": "Envelope", "value": "1"},
+                                    {
+                                        "label": "Envelope",
+                                        "value": "1",
+                                    },
                                     {
                                         "label": "Cepstrum prewhitening",
                                         "value": "2",
                                     },
-                                    {"label": "Benchmark", "value": "3"},
+                                    {
+                                        "label": "Benchmark",
+                                        "value": "3",
+                                    },
                                 ],
                                 value="1",
+                                clearable=False,
+                                allowDeselect=False,
                             ),
                             dmc.Text("Time Range (seconds)", fw=500, mt="xs"),
                             dmc.Group(
@@ -331,6 +339,8 @@ def create_header():
             dmc.Group(
                 h="100%",
                 px="sm",
+                justify="center",
+                align="center",
                 children=[
                     html.Img(
                         src="/static/openconmo_logo.png",

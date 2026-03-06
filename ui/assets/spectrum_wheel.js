@@ -10,6 +10,37 @@
   let spectrumX = null;
   let timeX = null;
 
+  function setNumericInputValue(componentId, value, decimals) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return false;
+
+    if (
+      window.dash_clientside &&
+      typeof window.dash_clientside.set_props === "function"
+    ) {
+      window.dash_clientside.set_props(componentId, { value: numericValue });
+      return true;
+    }
+
+    const root = document.getElementById(componentId);
+    const inputEl =
+      (root && root.tagName === "INPUT" ? root : null) ||
+      (root && root.querySelector ? root.querySelector("input") : null) ||
+      document.querySelector(`input[id="${componentId}"]`);
+
+    if (!inputEl) return false;
+
+    const renderedValue =
+      typeof decimals === "number"
+        ? numericValue.toFixed(decimals)
+        : String(numericValue);
+
+    inputEl.value = renderedValue;
+    inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    inputEl.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  }
+
   function attachWheelListener() {
     const container = document.getElementById(GRAPH_CONTAINER_ID);
     if (!container) return;
@@ -23,11 +54,14 @@
       const deltaY = event.deltaY || 0;
 
       if (deltaY !== 0 && spectrumX && spectrumX.length > 1) {
-        // Get current FF value from input
-        const ffInput = document.getElementById(FF_INPUT_ID);
-        if (!ffInput) return;
+        // Get current FF value from NumberInput wrapper/input
+        const ffRoot = document.getElementById(FF_INPUT_ID);
+        const ffInput =
+          (ffRoot && ffRoot.tagName === "INPUT" ? ffRoot : null) ||
+          (ffRoot && ffRoot.querySelector ? ffRoot.querySelector("input") : null) ||
+          document.querySelector(`input[id="${FF_INPUT_ID}"]`);
 
-        const currentFF = parseFloat(ffInput.value) || 0;
+        const currentFF = parseFloat(ffInput && ffInput.value) || 0;
 
         // Find nearest bin to current FF
         let idx = 0;
@@ -45,15 +79,7 @@
         const newIdx = Math.max(0, Math.min(idx + step, spectrumX.length - 1));
         const newFF = spectrumX[newIdx];
 
-        // Update FF through Dash's component update system
-        if (window.dash_clientside && typeof window.dash_clientside.set_props === "function") {
-          window.dash_clientside.set_props(FF_INPUT_ID, { value: newFF });
-        } else {
-          // Fallback: update input directly and dispatch events
-          ffInput.value = newFF.toFixed(3);
-          ffInput.dispatchEvent(new Event('input', { bubbles: true }));
-          ffInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        setNumericInputValue(FF_INPUT_ID, newFF, 3);
 
         console.log(`Wheel: FF ${currentFF.toFixed(3)} -> ${newFF.toFixed(3)} (bin ${idx} -> ${newIdx})`);
       }
@@ -81,7 +107,11 @@
       }
 
       if (deltaY !== 0 && timeX && timeX.length > 1) {
-        const tInput = document.getElementById(TIME_CURSOR_INPUT_ID);
+        const tRoot = document.getElementById(TIME_CURSOR_INPUT_ID);
+        const tInput =
+          (tRoot && tRoot.tagName === "INPUT" ? tRoot : null) ||
+          (tRoot && tRoot.querySelector ? tRoot.querySelector("input") : null) ||
+          document.querySelector(`input[id="${TIME_CURSOR_INPUT_ID}"]`);
         if (!tInput) return;
 
         const currentT = parseFloat(tInput.value) || timeX[0] || 0;
@@ -92,13 +122,7 @@
         const signedStep = deltaY > 0 ? -stepSec : stepSec;
         const newT = currentT + signedStep;
 
-        if (window.dash_clientside && typeof window.dash_clientside.set_props === "function") {
-          window.dash_clientside.set_props(TIME_CURSOR_INPUT_ID, { value: newT });
-        } else {
-          tInput.value = newT.toFixed(6);
-          tInput.dispatchEvent(new Event('input', { bubbles: true }));
-          tInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        setNumericInputValue(TIME_CURSOR_INPUT_ID, newT, 6);
       }
 
       event.preventDefault();

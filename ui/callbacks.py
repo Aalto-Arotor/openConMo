@@ -41,6 +41,44 @@ def register_callbacks(app):
             if trace.get("legendgroup") != "time-cursor-overlay"
         ]
 
+    def _normalize_method_value(value):
+        """Normalize method selector value to one of: '1', '2', '3'."""
+        if value is None:
+            return "1"
+
+        # Some component/state combinations may pass object-like values.
+        if isinstance(value, dict):
+            value = value.get("value", value.get("label", "1"))
+
+        text = str(value).strip().lower()
+        if text in {"1", "envelope"}:
+            return "1"
+        if text in {"2", "cepstrum prewhitening", "cepstrum-prewhitening"}:
+            return "2"
+        if text in {"3", "benchmark"}:
+            return "3"
+        return "1"
+
+    @app.callback(
+        Output("dummy-dropdown-1", "value"),
+        Input("upload-data", "contents"),
+        prevent_initial_call=True,
+    )
+    def reset_method_on_upload(contents):
+        """Reset analysis method to Envelope for each new upload."""
+        if contents is None:
+            return no_update
+        return "1"
+
+    def _to_float(value, default):
+        """Best-effort numeric coercion for callback values."""
+        if value is None:
+            return default
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
     @app.callback(
         [
             Output("time-plot", "figure"),
@@ -86,67 +124,42 @@ def register_callbacks(app):
     ):
 
         if contents is None:
+            # Avoid overwriting already rendered plots with a dummy figure
+            # during transient multi-callback ordering on upload/reset.
+            if existing_time_plot is not None and existing_env_plot is not None:
+                return no_update, no_update, no_update, no_update
             dummy_fig = create_dummy_figure("Upload a file")
             return dummy_fig, dummy_fig, None, None
 
         # Set reasonable defaults for None values
-        dropdown_value = dropdown_value or "1"  # Default to squared envelope
-        ff_hz = ff_hz or 0
-        n_harmonics = n_harmonics or 0
-        f_sb_hz = f_sb_hz or 0
+        # Normalize method value from UI (can arrive as None/int/str)
+        # and default to Envelope on upload.
+        dropdown_value = _normalize_method_value(dropdown_value)
+        ff_hz = _to_float(ff_hz, 0.0)
+        n_harmonics = int(_to_float(n_harmonics, 0.0))
+        f_sb_hz = _to_float(f_sb_hz, 0.0)
         freq_scale = freq_scale or "linear"
         amp_scale = amp_scale or "linear"
-        time_start = time_start or 1
-        time_stop = time_stop or 2
-        t_cursor_s = 0.5 if t_cursor_s is None else t_cursor_s
+        time_start = _to_float(time_start, 1.0)
+        time_stop = _to_float(time_stop, 2.0)
+        t_cursor_s = _to_float(t_cursor_s, 0.5)
+        if time_stop <= time_start:
+            time_stop = time_start + 1.0
 
         from dash import ctx
 
         triggered_id = ctx.triggered_id
-        recalc_triggers = {
-            "upload-data",
-            "dummy-dropdown-1",
-            "time-start",
-            "time-stop",
-        }
+        triggered_props = getattr(ctx, "triggered_prop_ids", {}) or {}
+        upload_triggered = any(
+            str(prop).startswith("upload-data.")
+            for prop in triggered_props.keys()
+        )
 
-        # Fast path: reuse already computed
-        # spectrum/time plots for cursor, axis and scale updates.
-        if (
-            triggered_id not in recalc_triggers
-            and existing_env_plot is not None
-            and existing_time_plot is not None
-        ):
-            env_plot = copy.deepcopy(existing_env_plot)
-            time_plot = copy.deepcopy(existing_time_plot)
-
-            _remove_cursor_overlays(env_plot)
-            _remove_time_cursor_overlays(time_plot)
-            env_plot["layout"]["xaxis"]["type"] = freq_scale
-            env_plot["layout"]["yaxis"]["type"] = amp_scale
-            add_harmonic_lines(env_plot, ff_hz, n_harmonics, None, f_sb_hz)
-            add_time_period_cursor(time_plot, ff_hz, t_cursor_s)
-            update_axis_ranges(
-                env_plot,
-                x_lim_1,
-                x_lim_2,
-                y_lim_1,
-                y_lim_2,
-                freq_scale,
-                amp_scale,
-            )
-
-            if ff_hz and n_harmonics and ff_hz > 0:
-                env_plot["layout"]["showlegend"] = True
-                env_plot["layout"]["legend"] = {
-                    "orientation": "h",
-                    "yanchor": "top",
-                    "y": -0.5,
-                    "xanchor": "center",
-                    "x": 0.5,
-                }
-
-            return time_plot, env_plot, no_update, no_update
+        # Always default to Envelope when a new file is uploaded.
+        # Use triggered props (not only triggered_id), because Dash can
+        # co-trigger multiple inputs on drop and report a non-upload id.
+        if upload_triggered or triggered_id == "upload-data":
+            dropdown_value = "1"
 
         try:
             (
@@ -163,6 +176,13 @@ def register_callbacks(app):
 
             start_idx = max(0, int(time_start * fs))
             stop_idx = min(len(signal), int(time_stop * fs))
+
+            # Fallback to full signal when selected time window is empty
+            # or too short for spectrum calculation.
+            if stop_idx - start_idx < 2:
+                start_idx = 0
+                stop_idx = len(signal)
+
             signal_slice = signal[start_idx:stop_idx]
 
             title_upper = f"Time Domain - {name} - {loc} (ID: {meas_id})"
@@ -389,6 +409,12 @@ def register_callbacks(app):
             signal, fs, name, loc, unit, m_id, fault, f_freqs, rot_freq = (
                 read_from_parquet(contents)
             )
+            meas_id_display = m_id if m_id is not None else "N/A"
+            rot_freq_display = (
+                f"{float(rot_freq):.3f}"
+                if rot_freq is not None
+                else "N/A"
+            )
 
             # Create clickable fault frequency items and store their values
             freq_items = []
@@ -402,7 +428,7 @@ def register_callbacks(app):
                     freq_items.append(
                         html.Div(
                             dmc.Text(
-                                f"{f_type}: {val:.2f} Hz",
+                                f"{f_type}: {val:.2f}",
                                 size="sm",
                                 style={
                                     "cursor": "pointer",
@@ -428,8 +454,20 @@ def register_callbacks(app):
                                 ),
                                 dmc.TableTr(
                                     [
+                                        dmc.TableTd("MAT file number:"),
+                                        dmc.TableTd(str(meas_id_display)),
+                                    ]
+                                ),
+                                dmc.TableTr(
+                                    [
                                         dmc.TableTd("Meas location:"),
                                         dmc.TableTd(loc),
+                                    ]
+                                ),
+                                dmc.TableTr(
+                                    [
+                                        dmc.TableTd("Rotating frequency:"),
+                                        dmc.TableTd(f"{float(rot_freq):.3f} Hz"),
                                     ]
                                 ),
                                 dmc.TableTr(
