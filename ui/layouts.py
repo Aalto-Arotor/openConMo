@@ -171,7 +171,7 @@ def create_top_panel():
                                 [
                                     dmc.NumberInput(
                                         id="time-start",
-                                        value=1,
+                                        value=0,
                                         step=1,
                                         decimalScale=2,
                                         label="Start",
@@ -179,7 +179,7 @@ def create_top_panel():
                                     ),
                                     dmc.NumberInput(
                                         id="time-stop",
-                                        value=2,
+                                        value=10,
                                         step=1,
                                         decimalScale=2,
                                         label="Stop",
