@@ -1,91 +1,262 @@
+import copy
+
+import dash_mantine_components as dmc
+import numpy as np
+from dash import html, no_update
+from dash.dependencies import ALL, Input, Output, State
 from figures import (
-    create_time_series_plot,
-    create_dummy_figure,
-    squared_envelope_plot,
-    cepstrum_prewhitening_plot,
-    benchmark_plot,
     add_harmonic_lines,
+    add_time_period_cursor,
+    benchmark_plot,
+    cepstrum_prewhitening_plot,
+    create_dummy_figure,
+    create_time_series_plot,
+    squared_envelope_plot,
     update_axis_ranges,
 )
 from utils import read_from_parquet
 
-from dash.dependencies import Input, Output, State
-from dash import html
-import dash_mantine_components as dmc
-import numpy as np
 
 def register_callbacks(app):
-    '''Register all Dash app callbacks for plot updates and metadata display.'''
-    
+    """Register all Dash app callbacks for
+    plot updates and metadata display."""
+
+    def _remove_cursor_overlays(fig):
+        """Remove harmonic/sideband/marker overlay traces from figure."""
+        if not fig or "data" not in fig:
+            return
+        fig["data"] = [
+            trace
+            for trace in fig["data"]
+            if trace.get("legendgroup") != "cursor-overlay"
+        ]
+
+    def _remove_time_cursor_overlays(fig):
+        """Remove time-window cursor overlay traces from a figure in-place."""
+        if not fig or "data" not in fig:
+            return
+        fig["data"] = [
+            trace
+            for trace in fig["data"]
+            if trace.get("legendgroup") != "time-cursor-overlay"
+        ]
+
     @app.callback(
-        [Output('time-plot', 'figure'),
-         Output('envelope-plot', 'figure')],
-        [Input('upload-data', 'contents'),
-         Input('dummy-dropdown-1', 'value'),
-         Input('time-start', 'value'),
-         Input('time-stop', 'value'),
-         Input('x_lim_1', 'value'),
-         Input('x_lim_2', 'value'),
-         Input('y_lim_1', 'value'),
-         Input('y_lim_2', 'value'),
-         Input('ff_hz', 'value'),
-         Input('n_harmonics', 'value'),
-         Input('f_sb_hz', 'value'),
-         Input('freq-scale', 'value'),
-         Input('amp-scale', 'value')]
+        [
+            Output("time-plot", "figure"),
+            Output("envelope-plot", "figure"),
+            Output("spectrum-x-hidden", "children"),
+            Output("time-x-hidden", "children"),
+        ],
+        [
+            Input("upload-data", "contents"),
+            Input("dummy-dropdown-1", "value"),
+            Input("time-start", "value"),
+            Input("time-stop", "value"),
+            Input("x_lim_1", "value"),
+            Input("x_lim_2", "value"),
+            Input("y_lim_1", "value"),
+            Input("y_lim_2", "value"),
+            Input("ff_hz", "value"),
+            Input("n_harmonics", "value"),
+            Input("f_sb_hz", "value"),
+            Input("t_cursor_s", "value"),
+            Input("freq-scale", "value"),
+            Input("amp-scale", "value"),
+        ],
+        [State("time-plot", "figure"), State("envelope-plot", "figure")],
     )
-    def update_plots(contents, dropdown_value, time_start, time_stop, 
-                    x_lim_1, x_lim_2, y_lim_1, y_lim_2,
-                    ff_hz, n_harmonics, f_sb_hz, freq_scale, amp_scale):
-        
+    def update_plots(
+        contents,
+        dropdown_value,
+        time_start,
+        time_stop,
+        x_lim_1,
+        x_lim_2,
+        y_lim_1,
+        y_lim_2,
+        ff_hz,
+        n_harmonics,
+        f_sb_hz,
+        t_cursor_s,
+        freq_scale,
+        amp_scale,
+        existing_time_plot,
+        existing_env_plot,
+    ):
+
         if contents is None:
             dummy_fig = create_dummy_figure("Upload a file")
-            return dummy_fig, dummy_fig
-        
+            return dummy_fig, dummy_fig, None, None
+
+        # Set reasonable defaults for None values
+        dropdown_value = dropdown_value or "1"  # Default to squared envelope
+        ff_hz = ff_hz or 0
+        n_harmonics = n_harmonics or 0
+        f_sb_hz = f_sb_hz or 0
+        freq_scale = freq_scale or "linear"
+        amp_scale = amp_scale or "linear"
+        time_start = time_start or 1
+        time_stop = time_stop or 2
+        t_cursor_s = 0.5 if t_cursor_s is None else t_cursor_s
+
+        from dash import ctx
+
+        triggered_id = ctx.triggered_id
+        recalc_triggers = {
+            "upload-data",
+            "dummy-dropdown-1",
+            "time-start",
+            "time-stop",
+        }
+
+        # Fast path: reuse already computed
+        # spectrum/time plots for cursor, axis and scale updates.
+        if (
+            triggered_id not in recalc_triggers
+            and existing_env_plot is not None
+            and existing_time_plot is not None
+        ):
+            env_plot = copy.deepcopy(existing_env_plot)
+            time_plot = copy.deepcopy(existing_time_plot)
+
+            _remove_cursor_overlays(env_plot)
+            _remove_time_cursor_overlays(time_plot)
+            env_plot["layout"]["xaxis"]["type"] = freq_scale
+            env_plot["layout"]["yaxis"]["type"] = amp_scale
+            add_harmonic_lines(env_plot, ff_hz, n_harmonics, None, f_sb_hz)
+            add_time_period_cursor(time_plot, ff_hz, t_cursor_s)
+            update_axis_ranges(
+                env_plot,
+                x_lim_1,
+                x_lim_2,
+                y_lim_1,
+                y_lim_2,
+                freq_scale,
+                amp_scale,
+            )
+
+            if ff_hz and n_harmonics and ff_hz > 0:
+                env_plot["layout"]["showlegend"] = True
+                env_plot["layout"]["legend"] = {
+                    "orientation": "h",
+                    "yanchor": "top",
+                    "y": -0.5,
+                    "xanchor": "center",
+                    "x": 0.5,
+                }
+
+            return time_plot, env_plot, no_update, no_update
+
         try:
-            signal, fs, name, loc, unit, meas_id, fault, fault_freqs, rot_freq = read_from_parquet(contents)
-            
+            (
+                signal,
+                fs,
+                name,
+                loc,
+                unit,
+                meas_id,
+                fault,
+                fault_freqs,
+                rot_freq,
+            ) = read_from_parquet(contents)
+
             start_idx = max(0, int(time_start * fs))
             stop_idx = min(len(signal), int(time_stop * fs))
             signal_slice = signal[start_idx:stop_idx]
-            
+
             title_upper = f"Time Domain - {name} - {loc} (ID: {meas_id})"
             title_env = f"Envelope Spectrum - {name} - {loc} (ID: {meas_id})"
-            
-            upper_plot = create_time_series_plot(signal_slice, fs, title=title_upper, unit=unit)
-            
+
+            upper_plot = create_time_series_plot(
+                signal_slice, fs, title=title_upper, unit=unit
+            )
+            add_time_period_cursor(upper_plot, ff_hz, t_cursor_s)
+
             if dropdown_value == "1":
-                env_plot = squared_envelope_plot(signal_slice, fs, title=title_env, unit=unit)
+                env_plot = squared_envelope_plot(
+                    signal_slice, fs, title=title_env, unit=unit
+                )
             elif dropdown_value == "2":
                 env_plot = cepstrum_prewhitening_plot(signal_slice, fs)
             else:
                 env_plot = benchmark_plot(signal_slice, fs)
 
             for plot in [env_plot]:
-                plot['layout']['xaxis']['type'] = freq_scale
-                plot['layout']['yaxis']['type'] = amp_scale
+                _remove_cursor_overlays(plot)
+                plot["layout"]["xaxis"]["type"] = freq_scale
+                plot["layout"]["yaxis"]["type"] = amp_scale
                 add_harmonic_lines(plot, ff_hz, n_harmonics, rot_freq, f_sb_hz)
-                update_axis_ranges(plot, x_lim_1, x_lim_2, y_lim_1, y_lim_2, freq_scale, amp_scale)
+                update_axis_ranges(
+                    plot,
+                    x_lim_1,
+                    x_lim_2,
+                    y_lim_1,
+                    y_lim_2,
+                    freq_scale,
+                    amp_scale,
+                )
 
                 if ff_hz and n_harmonics and ff_hz > 0:
-                    plot['layout']['showlegend'] = True
-                    plot['layout']['legend'] = {
-                        'orientation': 'h',
-                        'yanchor': 'top',
-                        'y': -0.5,
-                        'xanchor': 'center',
-                        'x': 0.5
+                    plot["layout"]["showlegend"] = True
+                    plot["layout"]["legend"] = {
+                        "orientation": "h",
+                        "yanchor": "top",
+                        "y": -0.5,
+                        "xanchor": "center",
+                        "x": 0.5,
                     }
 
-            return upper_plot, env_plot
-            
+            # Extract spectrum x values for client-side wheel calculations
+            x_vals = (
+                env_plot.get("data", [])[0].get("x", []) if env_plot else []
+            )
+            x_vals_list = [
+                float(x)
+                for x in x_vals
+                if isinstance(x, (int, float)) and np.isfinite(x)
+            ]
+
+            # Interpolate for finer frequency resolution (10x more points)
+            if len(x_vals_list) > 1:
+                # Create interpolated array with 10x more points
+                interpolated_x = np.interp(
+                    np.linspace(
+                        0, len(x_vals_list) - 1, len(x_vals_list) * 10
+                    ),
+                    np.arange(len(x_vals_list)),
+                    x_vals_list,
+                )
+                x_vals_list = interpolated_x.tolist()
+
+            # Store as JSON string in hidden div for JavaScript to read
+            import json
+
+            x_vals_json = json.dumps(x_vals_list)
+            time_x_vals = (
+                upper_plot.get("data", [])[0].get("x", [])
+                if upper_plot
+                else []
+            )
+            time_x_list = [
+                float(t)
+                for t in time_x_vals
+                if isinstance(t, (int, float)) and np.isfinite(t)
+            ]
+            time_x_json = json.dumps(time_x_list)
+
+            return upper_plot, env_plot, x_vals_json, time_x_json
+
         except Exception as e:
             print(f"Error reading file: {str(e)}")
             error_fig = create_dummy_figure(f"Error: {str(e)}")
-            return error_fig, error_fig
+            return error_fig, error_fig, None, None
 
     @app.callback(
-        Output("bearing-fault-results", "children"),
+        [
+            Output("bearing-fault-results", "children"),
+            Output("bearing-freq-store", "data"),
+        ],
         Input("bearing-calc-btn", "n_clicks"),
         State("bearing-speed-rpm", "value"),
         State("bearing-n-rollers", "value"),
@@ -95,69 +266,301 @@ def register_callbacks(app):
         prevent_initial_call=True,
     )
     def calculate_bearing_faults(n_clicks, rpm, n, d_mm, D_mm, theta_deg):
-        if rpm is None or n is None or d_mm is None or D_mm is None or theta_deg is None:
-            return dmc.Alert("Please fill all bearing inputs before calculating.", color="yellow", title="Missing Input")
+        if (
+            rpm is None
+            or n is None
+            or d_mm is None
+            or D_mm is None
+            or theta_deg is None
+        ):
+            return (
+                dmc.Alert(
+                    "Please fill all bearing inputs before calculating.",
+                    color="yellow",
+                    title="Missing Input",
+                ),
+                None,
+            )
 
         if rpm <= 0 or n < 1 or d_mm <= 0 or D_mm <= 0:
-            return dmc.Alert(
-                "Shaft speed, number of rolling elements, and diameters must be positive.",
-                color="yellow",
-                title="Invalid Input",
+            msg = (
+                "Shaft speed, number of rolling elements, "
+                "and diameters must be positive."
+            )
+            return (
+                dmc.Alert(msg, color="yellow", title="Invalid Input"),
+                None,
             )
 
         if d_mm >= D_mm:
-            return dmc.Alert(
-                "Rolling element diameter d must be smaller than pitch diameter D.",
-                color="red",
-                title="Invalid Bearing Geometry",
+            msg = (
+                "Rolling element diameter d must be smaller "
+                "than pitch diameter D."
+            )
+            return (
+                dmc.Alert(msg, color="red", title="Invalid Bearing Geometry"),
+                None,
             )
 
         fr = rpm / 60.0
         ratio = (d_mm / D_mm) * np.cos(np.radians(theta_deg))
-        
-        return dmc.SimpleGrid(
+
+        ftf = 0.5 * fr * (1 - ratio)
+        bpfo = 0.5 * n * fr * (1 - ratio)
+        bpfi = 0.5 * n * fr * (1 + ratio)
+        bsf = (D_mm / (2 * d_mm)) * fr * (1 - ratio**2)
+
+        # Store the calculated values
+        freq_data = {"ftf": ftf, "bpfo": bpfo, "bpfi": bpfi, "bsf": bsf}
+
+        display = dmc.SimpleGrid(
             cols=2,
             spacing="xs",
             children=[
-                dmc.Paper([dmc.Text("FTF", fw=700, size="xs"), dmc.Text(f"{0.5*fr*(1-ratio):.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BPFO", fw=700, size="xs"), dmc.Text(f"{0.5*n*fr*(1-ratio):.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BPFI", fw=700, size="xs"), dmc.Text(f"{0.5*n*fr*(1+ratio):.3f} Hz")], p="sm", withBorder=True),
-                dmc.Paper([dmc.Text("BSF", fw=700, size="xs"), dmc.Text(f"{(D_mm/(2*d_mm))*fr*(1-ratio**2):.3f} Hz")], p="sm", withBorder=True),
+                html.Div(
+                    dmc.Paper(
+                        [
+                            dmc.Text("FTF", fw=700, size="xs"),
+                            dmc.Text(f"{ftf:.3f} Hz"),
+                        ],
+                        p="sm",
+                        withBorder=True,
+                        style={"cursor": "pointer"},
+                    ),
+                    id="ftf-click",
+                    n_clicks=0,
+                ),
+                html.Div(
+                    dmc.Paper(
+                        [
+                            dmc.Text("BPFO", fw=700, size="xs"),
+                            dmc.Text(f"{bpfo:.3f} Hz"),
+                        ],
+                        p="sm",
+                        withBorder=True,
+                        style={"cursor": "pointer"},
+                    ),
+                    id="bpfo-click",
+                    n_clicks=0,
+                ),
+                html.Div(
+                    dmc.Paper(
+                        [
+                            dmc.Text("BPFI", fw=700, size="xs"),
+                            dmc.Text(f"{bpfi:.3f} Hz"),
+                        ],
+                        p="sm",
+                        withBorder=True,
+                        style={"cursor": "pointer"},
+                    ),
+                    id="bpfi-click",
+                    n_clicks=0,
+                ),
+                html.Div(
+                    dmc.Paper(
+                        [
+                            dmc.Text("BSF", fw=700, size="xs"),
+                            dmc.Text(f"{bsf:.3f} Hz"),
+                        ],
+                        p="sm",
+                        withBorder=True,
+                        style={"cursor": "pointer"},
+                    ),
+                    id="bsf-click",
+                    n_clicks=0,
+                ),
             ],
         )
 
+        return display, freq_data
+
     @app.callback(
-        Output('metadata-display', 'children'),
-        Input('upload-data', 'contents')
+        [
+            Output("metadata-display", "children"),
+            Output("parquet-freq-store", "data"),
+        ],
+        Input("upload-data", "contents"),
     )
     def update_metadata(contents):
         if contents is None:
-            return dmc.Text("No file uploaded yet", c="dimmed")
-        
+            return dmc.Text("No file uploaded yet", c="dimmed"), None
+
         try:
-            signal, fs, name, loc, unit, m_id, fault, f_freqs, rot_freq = read_from_parquet(contents)
-            
-            return dmc.Table(
-                striped=True,
-                highlightOnHover=True,
-                withTableBorder=True,
-                children=[
-                    dmc.TableTbody([
-                        dmc.TableTr([dmc.TableTd("Name:"), dmc.TableTd(name)]),
-                        dmc.TableTr([dmc.TableTd("Meas location:"), dmc.TableTd(loc)]),
-                        dmc.TableTr([dmc.TableTd("Sampling Rate:"), dmc.TableTd(f"{fs} Hz")]),
-                        dmc.TableTr([
-                            dmc.TableTd("Fault Frequencies:"), 
-                            dmc.TableTd(
-                                dmc.Stack([
-                                    dmc.Text(f"{f_type}: {val:.2f}")
-                                    for _, freqs in f_freqs.items() 
-                                    for f_type, val in freqs.items()
-                                ], gap="xs")
-                            )
-                        ])
-                    ])
-                ]
+            signal, fs, name, loc, unit, m_id, fault, f_freqs, rot_freq = (
+                read_from_parquet(contents)
+            )
+
+            # Create clickable fault frequency items and store their values
+            freq_items = []
+            freq_data = {}
+            idx = 0
+
+            for bearing_loc, freqs in f_freqs.items():
+                for f_type, val in freqs.items():
+                    freq_id = f"parquet-freq-{idx}"
+                    freq_data[freq_id] = val
+                    freq_items.append(
+                        html.Div(
+                            dmc.Text(
+                                f"{f_type}: {val:.2f} Hz",
+                                size="sm",
+                                style={
+                                    "cursor": "pointer",
+                                    "padding": "2px 0",
+                                },
+                            ),
+                            id={"type": "parquet-freq", "index": idx},
+                            n_clicks=0,
+                        )
+                    )
+                    idx += 1
+
+            return (
+                dmc.Table(
+                    striped=True,
+                    highlightOnHover=True,
+                    withTableBorder=True,
+                    children=[
+                        dmc.TableTbody(
+                            [
+                                dmc.TableTr(
+                                    [dmc.TableTd("Name:"), dmc.TableTd(name)]
+                                ),
+                                dmc.TableTr(
+                                    [
+                                        dmc.TableTd("Meas location:"),
+                                        dmc.TableTd(loc),
+                                    ]
+                                ),
+                                dmc.TableTr(
+                                    [
+                                        dmc.TableTd("Sampling Rate:"),
+                                        dmc.TableTd(f"{fs} Hz"),
+                                    ]
+                                ),
+                                dmc.TableTr(
+                                    [
+                                        dmc.TableTd("Fault Frequencies:"),
+                                        dmc.TableTd(html.Div(freq_items)),
+                                    ]
+                                ),
+                            ]
+                        )
+                    ],
+                ),
+                freq_data,
             )
         except Exception as e:
-            return dmc.Alert(f"Error: {str(e)}", color="red", title="Upload Error")
+            return (
+                dmc.Alert(
+                    f"Error: {str(e)}", color="red", title="Upload Error"
+                ),
+                None,
+            )
+
+    # Callbacks to update FF input when clicking on fault frequency results
+    @app.callback(
+        Output("ff_hz", "value"),
+        [
+            Input("ftf-click", "n_clicks"),
+            Input("bpfo-click", "n_clicks"),
+            Input("bpfi-click", "n_clicks"),
+            Input("bsf-click", "n_clicks"),
+        ],
+        [State("bearing-freq-store", "data"), State("ff_hz", "value")],
+        prevent_initial_call=True,
+    )
+    def update_ff_from_click(
+        ftf_clicks, bpfo_clicks, bpfi_clicks, bsf_clicks, freq_data, current_ff
+    ):
+        """Update FF input when a fault frequency is clicked."""
+        from dash import ctx
+
+        if not ctx.triggered or not freq_data:
+            return current_ff
+
+        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        # Map the triggered component to its corresponding value from store
+        value_map = {
+            "ftf-click": freq_data.get("ftf"),
+            "bpfo-click": freq_data.get("bpfo"),
+            "bpfi-click": freq_data.get("bpfi"),
+            "bsf-click": freq_data.get("bsf"),
+        }
+
+        if triggered_id in value_map and value_map[triggered_id] is not None:
+            return value_map[triggered_id]
+
+        return current_ff
+
+    # Callback to update FF input when clicking on parquet fault frequencies
+    @app.callback(
+        Output("ff_hz", "value", allow_duplicate=True),
+        [Input({"type": "parquet-freq", "index": ALL}, "n_clicks")],
+        [State("parquet-freq-store", "data"), State("ff_hz", "value")],
+        prevent_initial_call=True,
+    )
+    def update_ff_from_parquet_click(n_clicks_list, freq_data, current_ff):
+        """Update FF input when a parquet fault frequency is clicked."""
+        from dash import ctx
+
+        if not ctx.triggered or not freq_data:
+            return current_ff
+
+        triggered_id = ctx.triggered[0]["prop_id"]
+
+        # Parse the triggered ID to get the index
+        import json
+
+        if triggered_id and triggered_id != ".":
+            try:
+                id_dict = json.loads(triggered_id.split(".")[0])
+                if id_dict.get("type") == "parquet-freq":
+                    idx = id_dict.get("index")
+                    freq_id = f"parquet-freq-{idx}"
+                    if freq_id in freq_data:
+                        return freq_data[freq_id]
+            except json.JSONDecodeError:
+                pass
+
+        return current_ff
+
+    @app.callback(
+        Output("ff_hz", "value", allow_duplicate=True),
+        Input("envelope-plot", "clickData"),
+        State("ff_hz", "value"),
+        prevent_initial_call=True,
+    )
+    def update_ff_from_spectrum_click(click_data, current_ff):
+        """Update FF from spectrum click (middle mouse when available)."""
+        if (
+            not click_data
+            or "points" not in click_data
+            or not click_data["points"]
+        ):
+            return no_update
+
+        point = click_data["points"][0]
+        x_val = point.get("x", None)
+        if x_val is None:
+            return no_update
+
+        # Plotly/Dash may not always expose
+        # mouse button info in clickData.
+        # If present, honor middle-button
+        #  (button == 1). Otherwise, accept click.
+        event_info = (
+            click_data.get("event", {}) if isinstance(click_data, dict) else {}
+        )
+        button = event_info.get("button", None)
+        if button is not None and button != 1:
+            return no_update
+
+        try:
+            return float(x_val)
+        except (TypeError, ValueError):
+            return current_ff
+
+    # Client-side wheel handling is now in assets/spectrum_wheel.js
+    # No need for server callback - JavaScript handles bin calculation directly
