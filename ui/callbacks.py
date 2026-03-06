@@ -91,18 +91,21 @@ def register_callbacks(app):
             Input("dummy-dropdown-1", "value"),
             Input("time-start", "value"),
             Input("time-stop", "value"),
-            Input("x_lim_1", "value"),
-            Input("x_lim_2", "value"),
-            Input("y_lim_1", "value"),
-            Input("y_lim_2", "value"),
-            Input("ff_hz", "value"),
-            Input("n_harmonics", "value"),
-            Input("f_sb_hz", "value"),
-            Input("t_cursor_s", "value"),
-            Input("freq-scale", "value"),
-            Input("amp-scale", "value"),
         ],
-        [State("time-plot", "figure"), State("envelope-plot", "figure")],
+        [
+            State("x_lim_1", "value"),
+            State("x_lim_2", "value"),
+            State("y_lim_1", "value"),
+            State("y_lim_2", "value"),
+            State("ff_hz", "value"),
+            State("n_harmonics", "value"),
+            State("f_sb_hz", "value"),
+            State("t_cursor_s", "value"),
+            State("freq-scale", "value"),
+            State("amp-scale", "value"),
+            State("time-plot", "figure"),
+            State("envelope-plot", "figure"),
+        ],
     )
     def update_plots(
         contents,
@@ -271,6 +274,84 @@ def register_callbacks(app):
             print(f"Error reading file: {str(e)}")
             error_fig = create_dummy_figure(f"Error: {str(e)}")
             return error_fig, error_fig, None, None
+
+    @app.callback(
+        [
+            Output("time-plot", "figure", allow_duplicate=True),
+            Output("envelope-plot", "figure", allow_duplicate=True),
+        ],
+        [
+            Input("ff_hz", "value"),
+            Input("n_harmonics", "value"),
+            Input("f_sb_hz", "value"),
+            Input("t_cursor_s", "value"),
+            Input("x_lim_1", "value"),
+            Input("x_lim_2", "value"),
+            Input("y_lim_1", "value"),
+            Input("y_lim_2", "value"),
+            Input("freq-scale", "value"),
+            Input("amp-scale", "value"),
+        ],
+        [State("time-plot", "figure"), State("envelope-plot", "figure")],
+        prevent_initial_call=True,
+    )
+    def update_plot_overlays(
+        ff_hz,
+        n_harmonics,
+        f_sb_hz,
+        t_cursor_s,
+        x_lim_1,
+        x_lim_2,
+        y_lim_1,
+        y_lim_2,
+        freq_scale,
+        amp_scale,
+        existing_time_plot,
+        existing_env_plot,
+    ):
+        if not existing_time_plot or not existing_env_plot:
+            return no_update, no_update
+
+        ff_hz = _to_float(ff_hz, 0.0)
+        n_harmonics = int(_to_float(n_harmonics, 0.0))
+        f_sb_hz = _to_float(f_sb_hz, 0.0)
+        t_cursor_s = _to_float(t_cursor_s, 0.5)
+        freq_scale = freq_scale or "linear"
+        amp_scale = amp_scale or "linear"
+
+        upper_plot = copy.deepcopy(existing_time_plot)
+        env_plot = copy.deepcopy(existing_env_plot)
+
+        _remove_time_cursor_overlays(upper_plot)
+        add_time_period_cursor(upper_plot, ff_hz, t_cursor_s)
+
+        _remove_cursor_overlays(env_plot)
+        env_plot["layout"]["xaxis"]["type"] = freq_scale
+        env_plot["layout"]["yaxis"]["type"] = amp_scale
+        add_harmonic_lines(env_plot, ff_hz, n_harmonics, None, f_sb_hz)
+        update_axis_ranges(
+            env_plot,
+            x_lim_1,
+            x_lim_2,
+            y_lim_1,
+            y_lim_2,
+            freq_scale,
+            amp_scale,
+        )
+
+        if ff_hz and n_harmonics and ff_hz > 0:
+            env_plot["layout"]["showlegend"] = True
+            env_plot["layout"]["legend"] = {
+                "orientation": "h",
+                "yanchor": "top",
+                "y": -0.5,
+                "xanchor": "center",
+                "x": 0.5,
+            }
+        else:
+            env_plot["layout"]["showlegend"] = False
+
+        return upper_plot, env_plot
 
     @app.callback(
         [
