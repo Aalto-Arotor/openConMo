@@ -90,7 +90,7 @@ def fast_kurtogram(x,fs,nlevel=7, verbose=False):
     N2 = np.log2(N) - 7
     if nlevel > N2:
         raise ValueError('Please enter a smaller number of decomposition levels')
-    x -= np.mean(x)
+    x = x - np.mean(x)
     N = 16
     fc = 0.4
     h = firwin(N+1,fc) * np.exp(2j * np.pi * np.arange(N+1) * 0.125)
